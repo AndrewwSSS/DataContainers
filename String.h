@@ -69,7 +69,7 @@ namespace DataContainers{
 			for (uint32_t i = 0; i < strtotalLen; i++)
 				newData[size - 1 + i] = str[i];
 
-			newData[size + strtotalLen - 1] = '\n';
+			newData[size + strtotalLen - 1] = '\0';
 			return String{ newData };
 		}
 		String Append(const String& str) {
@@ -102,7 +102,7 @@ namespace DataContainers{
 			return data;
 		}
 		uint32_t Len() const {
-			return size;
+			return size-1;
 		}
 		char operator[](uint32_t index)const {
 			assert(index <= size - 1 && "Index out of range");
@@ -228,7 +228,7 @@ namespace DataContainers{
 			return *this;
 		}
 		String& operator=(const String& str) {
-			size = str.Len();
+			size = str.Len()+1;
 
 			this->data = new char[size];
 			for (uint32_t i = 0; i < size; i++)
@@ -245,7 +245,7 @@ namespace DataContainers{
 			auto string2 = str.CStr();
 
 			auto len1 = size-1;
-			auto len2 = str.Len()-1;
+			auto len2 = str.Len();
 
 			if(len2 > len1) {
 				swap(string1, string2);
@@ -282,6 +282,7 @@ namespace DataContainers{
 
 			uint32_t lastIDX = 0;
 			for (uint32_t i = 0; i < size-1; i++) {
+
 				if(i != 0 && data[i - 1] == separator && data[i] == separator) {
 					if(emptyElements)
 						result.Append("");
@@ -290,9 +291,13 @@ namespace DataContainers{
 				}
 
 				if((data[i] == separator && i != 0) ||
-				   (data[i] != separator && i == size - 1)) {
+				   (data[i] != separator && i == size - 2)) {
 
-					const auto len = i - lastIDX;
+					auto len = i - lastIDX;
+					if (i == size - 2) {
+						len += 1;
+						i += 1;
+					}
 					char* prev = new char[len + 1];
 
 					for (uint32_t k = lastIDX, ind = 0; k < i; k++, ind++)

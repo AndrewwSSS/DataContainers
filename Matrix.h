@@ -1,16 +1,15 @@
 ﻿#pragma once
 #define NOMINMAX
+#include <Windows.h>
 #include <iomanip>
 #include "String.h"
 #include <iostream>
-#include <Windows.h>
 #include <string>
 #include <cassert>
 #include <optional>
 #include <format>
 #include "Vector.h"
 
-using namespace std;
 
 namespace DataContainers {
 	template <typename type, typename = enable_if_t<is_arithmetic_v<type>>>
@@ -653,6 +652,24 @@ namespace DataContainers {
 			return result;
 		}
 
+		static Matrix<double> Parse(const String& data) {
+			auto rows = data.Split('\n', false);
+			int h = rows.Size();
+			int w = rows[0].Split(' ', false).Size();
+
+			auto m = Matrix<double>(h, w);
+
+			for(const auto& row : rows)	{
+				for(const auto& elem : row.Split(' ', false)) {
+					double buffer;
+					_atodbl((_CRT_DOUBLE*)&buffer, elem.CStr());
+					m.Append(buffer);
+				}
+			}
+			return m;
+
+			
+		}
 
 	};
 }
