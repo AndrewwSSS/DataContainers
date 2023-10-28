@@ -4,10 +4,11 @@
 #include<fstream>
 #include<istream>
 #include <vector>
+
 #include "Vector.h"
 
-using namespace std;
 namespace DataContainers{
+	using namespace std;
 	class String
 	{
 	protected:
@@ -37,7 +38,7 @@ namespace DataContainers{
 				this->data[i] = str.data[i];
 		}
 		~String() {
-			Ñlear();
+			clear();
 		}
 
 		static uint32_t getLen(const char* str) {
@@ -46,10 +47,10 @@ namespace DataContainers{
 				len += 1;
 			return len;
 		}
-		String Append(const char* str) {
-			const uint32_t strtotalLen = getLen(str);
+		String append(const char* str) {
+			const uint32_t len = getLen(str);
 
-			if (str == nullptr || strtotalLen == 1)
+			if (str == nullptr || len == 1)
 				return *this;
 
 			uint32_t newLen = 0;
@@ -59,23 +60,23 @@ namespace DataContainers{
 			else
 				newLen += size - 1;
 
-			newLen += strtotalLen;
+			newLen += len;
 
 			char* newData = new char[newLen];
 
 			for (uint32_t i = 0; i < size; i++)
 				newData[i] = this->data[i];
 
-			for (uint32_t i = 0; i < strtotalLen; i++)
+			for (uint32_t i = 0; i < len; i++)
 				newData[size - 1 + i] = str[i];
 
-			newData[size + strtotalLen - 1] = '\0';
+			newData[size + len - 1] = '\0';
 			return String{ newData };
 		}
-		String Append(const String& str) {
-			return Append(str.CStr());
+		String append(const String& str) {
+			return append(str.cStr());
 		}
-		String Revers() const {
+		String revers() const {
 			char* newData = new char[size];
 			for (uint32_t i = 0, j = size - 2; i < size - 1; i++, j--)
 				newData[i] = this->data[j];
@@ -83,17 +84,17 @@ namespace DataContainers{
 			newData[size - 1] = '\0';
 			return newData;
 		}
-		void Ñlear() {
+		void clear() {
 			if (data != nullptr) {
 				delete[] data;
 				data = nullptr;
 			}
 			size = 0;
 		}
-		bool Empty() const {
+		bool empty() const {
 			return size == 0;
 		}
-		char* CStr() const {
+		char* cStr() const {
 			char* result = new char[size];
 
 			for (uint32_t i = 0; i < size; i++)
@@ -101,16 +102,16 @@ namespace DataContainers{
 
 			return data;
 		}
-		uint32_t Len() const {
+		uint32_t len() const {
 			return size-1;
 		}
-		char operator[](uint32_t index)const {
+
+		char operator[](uint32_t index) const {
 			assert(index <= size - 1 && "Index out of range");
 			return data[index];
 		}
-
 		friend std::ostream& operator<<(std::ostream& os, const String& str) {
-			if (!str.Empty())
+			if (!str.empty())
 				os << str.data;
 			return os;
 		}
@@ -119,8 +120,8 @@ namespace DataContainers{
 			std::cin.getline(buffer, _MAX_PATH);
 			const uint32_t totalLen = String::getLen(buffer);
 
-			if (!str.Empty())
-				str.Ñlear();
+			if (!str.empty())
+				str.clear();
 
 			str.data = new char[totalLen + 1];
 			str.size = totalLen + 1;
@@ -131,12 +132,10 @@ namespace DataContainers{
 
 			return in;
 		}
-
-
 		void operator+=(const char* str) {
-			const int oldLen = size;
+			const uint32_t oldLen = size;
 			if (size == 0) size++;
-			size += (String::getLen(str) - 1);
+			size += getLen(str) - 1;
 
 			char* oldData = new char[oldLen];
 
@@ -159,9 +158,9 @@ namespace DataContainers{
 				data[i] = str[j];
 		}
 		void operator+=(const String& str) {
-			int oldLen = size;
+			const uint32_t oldLen = size;
 			if (oldLen == 0) size++;
-			size += (str.size - 1);
+			size += str.size - 1;
 
 			char* oldData = new char[oldLen];
 
@@ -228,7 +227,8 @@ namespace DataContainers{
 			return *this;
 		}
 		String& operator=(const String& str) {
-			size = str.Len()+1;
+			if (this == &str) return *this;
+			size = str.len()+1;
 
 			this->data = new char[size];
 			for (uint32_t i = 0; i < size; i++)
@@ -240,12 +240,12 @@ namespace DataContainers{
 
 		// Based on Levenshtein distance algorithm
 		// Return similarity between strings in percentage from 0 to 100
-		uint32_t Similarity(const String& str) {
-			auto string1 = CStr();
-			auto string2 = str.CStr();
+		uint8_t similarity(const String& str) const {
+			auto string1 = cStr();
+			auto string2 = str.cStr();
 
 			auto len1 = size-1;
-			auto len2 = str.Len();
+			auto len2 = str.len();
 
 			if(len2 > len1) {
 				swap(string1, string2);
@@ -254,7 +254,7 @@ namespace DataContainers{
 
 			Vector<uint32_t> currentRow(len1+1);
 			for (uint32_t i = 0; i < len1 + 1; i++)
-				currentRow.PushBack(i);
+				currentRow.pushBack(i);
 
 			for (size_t i=1; i < len2+1; i++) {
 				Vector<uint32_t> previousRow = currentRow;
@@ -268,7 +268,7 @@ namespace DataContainers{
 						change += 1;
 
 					Vector<uint32_t> tmp = { add, del, change };
-					currentRow[j] = tmp.Reduce([](uint32_t a, uint32_t b)
+					currentRow[j] = tmp.reduce([](uint32_t a, uint32_t b)
 					{
 						return std::min(a, b);
 					});
@@ -277,7 +277,7 @@ namespace DataContainers{
 			return (1 - static_cast<float>(currentRow[len1]) / len2) * 100;
 		}
 
-		Vector<String> Split(const char separator = ' ', const bool emptyElements = true) const {
+		Vector<String> split(const char separator = ' ', const bool emptyElements = true) const {
 			Vector<String> result;
 
 			uint32_t lastIDX = 0;
@@ -285,7 +285,7 @@ namespace DataContainers{
 
 				if(i != 0 && data[i - 1] == separator && data[i] == separator) {
 					if(emptyElements)
-						result.Append("");
+						result.append("");
 					lastIDX += 1;
 					continue;
 				}
@@ -294,6 +294,7 @@ namespace DataContainers{
 				   (data[i] != separator && i == size - 2)) {
 
 					auto len = i - lastIDX;
+
 					if (i == size - 2) {
 						len += 1;
 						i += 1;
@@ -304,7 +305,7 @@ namespace DataContainers{
 						prev[ind] = data[k];
 					
 					prev[len] = '\0';
-					result.Append(String(prev));
+					result.append(String(prev));
 					lastIDX = i + 1;
 				}
 				else if (data[i] == separator && i == 0) {

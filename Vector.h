@@ -4,244 +4,217 @@
 #include <iostream>
 
 namespace DataContainers {
-	template<typename type>
+	template<typename T>
 	class Vector
 	{
 	private:
-		type* data;
-		unsigned int size;
-		unsigned int capacity;
+		T* data_;
+		uint32_t size_;
+		uint32_t capacity_;
 
 		void setCapacity(int value = -1) {
 			if (value == -1)
-				capacity *= 2;
-			if (capacity == 0)
-				capacity = 8;
+				capacity_ *= 2;
+			else if (capacity_ == 0)
+				capacity_ = 8;
 
-			type* newData = new type[capacity];
+			T* newData = new T[capacity_];
 
-			if (size != 0) {
-				for (unsigned int i = 0; i < size; i++)
-					newData[i] = data[i];
+			if (size_ != 0) {
+				for (uint32_t i = 0; i < size_; i++)
+					newData[i] = data_[i];
 
-				delete[] data;
+				delete[] data_;
 			}
-			data = newData;
+			data_ = newData;
 		}
 	public:
-		Vector(unsigned int capacity = 8) :
-			capacity(capacity),	size(0) {
-			data = new type[capacity];
-		}	
-		Vector(const Vector<type>& list) : Vector(list.Size()) {
-			for (unsigned int i = 0; i < list.Size(); i++)
-				PushBack(list[i]);
+		Vector(uint32_t capacity = 8) {
+			size_ = 0;
+			capacity_ = capacity;
+			data_ = new T[capacity];
 		}
-		Vector(const std::initializer_list<type> _arr) : Vector(_arr.size()) {
+		Vector(const Vector<T>& list) : Vector(list.size()) {
+			for (uint32_t i = 0; i < list.size(); i++)
+				pushBack(list[i]);
+		}
+		Vector(const std::initializer_list<T> _arr) : Vector(_arr.size()) {
 			for (const auto& elem : _arr)
-				PushBack(elem);
+				pushBack(elem);
 		}
 		~Vector() {
-			Clear();
+			clear();
 		}
 
-
-		void Append(const std::initializer_list<type> _arr) {
+		void append(const std::initializer_list<T> _arr) {
 			for (const auto& elem : _arr)
-				PushBack(elem);
+				pushBack(elem);
 		}
-
-		void Append(const type& data) {
-			PushBack(data);
+		void append(const T& data) {
+			pushBack(data);
 		}
-
-		type Reduce(std::function<type(type, type)> func) {
-			type startVal = data[0];
-			for (size_t i = 1; i < size; i++) {
-				startVal = func(startVal, data[i]);
+		T reduce(std::function<T(T, T)> func) {
+			T startVal = data_[0];
+			for (size_t i = 1; i < size_; i++) {
+				startVal = func(startVal, data_[i]);
 			}
 			return startVal;
 		}
-
-		type Min() {
-			type res = data[0];
-			for (size_t i = 1; i < size; i++) {
-				if (data[i] < res)
-					res = data[i];
-			}
-			return res;
-		}
-		type Max() {
-			type res = data[0];
-			for (size_t i = 1; i < size; i++) {
-				if (data[i] > res)
-					res = data[i];
-			}
-			return res;
-		}
-
-		void PushBack(const type& elem) {
-			if (size == capacity)
+		void pushBack(const T& elem) {
+			if (size_ == capacity_)
 				setCapacity();
 
-			data[size] = elem;
-			size++;
+			data_[size_] = elem;
+			size_++;
 		}
-		void PushBack(const Vector<type>& vector) {
-			if (size+vector.Size() > capacity)
-				setCapacity(size + vector.Size());
+		void pushBack(const Vector<T>& vector) {
+			if (size_ + vector.size() > capacity_)
+				setCapacity(size_ + vector.size());
 
-			for (size_t i = size; i < size + vector.Size(); i++)
-				data[i] = vector[i - size];
+			for (size_t i = size_; i < size_ + vector.size(); i++)
+				data_[i] = vector[i - size_];
 
-			size += vector.Size();
+			size_ += vector.size();
 		}
-		void PushFront(const type& elem) {
-			if (size == capacity)
+		void pushFront(const T& elem) {
+			if (size_ == capacity_)
 				setCapacity();
 
 
-			type* newData = new type[capacity];
+			T* newData = new T[capacity_];
 			newData[0] = elem;
 
-			for (unsigned int i = 0; i < size; i++)
-				newData[i + 1] = data[i];
+			for (uint32_t i = 0; i < size_; i++)
+				newData[i + 1] = data_[i];
 
-			delete[] data;
-			data = newData;
-			size++;
+			delete[] data_;
+			data_ = newData;
+			size_++;
+		}
+		void remove(uint32_t ind) {
+			assert(ind < size_ && "Index out of range");
+
+			T* newData = new T[capacity_];
+
+			for (uint32_t i = 0; i < ind; i++)
+				newData[i] = data_[i];
+
+
+			for (uint32_t i = ind + 1; i < size_; i++)
+				newData[i] = data_[i - 1];
+
+
+			delete[] data_;
+			data_ = newData;
+			size_--;
+		}
+		T popBack() {
+			assert(size_ > 0);
+
+			T elem = data_[size_ - 1];
+			size_--;
+			return elem;
+		}
+		T popFront() {
+			T* newData = new T[capacity_];
+
+			for (uint32_t i = 0; i < size_ - 1; i++)
+				newData[i] = data_[i + 1];
+
+			T result = data_[0];
+			delete[] data_;
+			data_ = newData;
+			size_--;
+			return result;
+		}
+		T Pop(uint32_t ind) {
+			assert(ind < size_ && "Index out of range");
+			if (ind == 0)
+				return popFront();
+			if (ind == size_ - 1)
+				return popBack();
+
+			T* newData = new T[capacity_];
+
+			for (uint32_t i = 0; i < ind; i++)
+				newData[i] = data_[i];
+
+			T result = data_[ind];
+
+			for (uint32_t i = ind + 1; i < size_; i++)
+				newData[i] = data_[i - 1];
+
+			delete[] data_;
+			data_ = newData;
+			size_--;
+			return result;
+		}
+		T& At(uint32_t ind) const {
+			assert(ind < capacity_ && "Index out of range");
+			return data_[ind];
 		}
 
-		void Insert(const type& elem, unsigned ind) {
+		void insert(const T& elem, uint32_t ind) {
 
 			if (ind == 0)
-				return PushFront(elem);
-			if (ind == size - 1)
-				return PushBack(elem);
-			if (size == capacity)
+				return pushFront(elem);
+			if (ind == size_ - 1)
+				return pushBack(elem);
+			if (size_ == capacity_)
 				setCapacity();
 
-			type* newData = new type[capacity];
+			T* newData = new T[capacity_];
 
-			for (unsigned int i = 0; i < ind; i++)
-				newData[i] = data[i];
+			for (uint32_t i = 0; i < ind; i++)
+				newData[i] = data_[i];
 
 			newData[ind] = elem;
 
-			for (unsigned int i = ind; i < size; i++)
-				newData[i + 1] = data[i];
+			for (uint32_t i = ind; i < size_; i++)
+				newData[i + 1] = data_[i];
 
 
-			delete[] data;
-			data = newData;
+			delete[] data_;
+			data_ = newData;
 
-			size++;
+			size_++;
 		}
-		void ForEach(const std::function<void(type)>& function)	{
-			for (size_t i = 0; i < size; i++)
-				function(data[i]);
+		void forEach(const std::function<void(T)>& function) {
+			for (size_t i = 0; i < size_; i++)
+				function(data_[i]);
 		}
-		Vector<type> Filter(const std::function<bool(type)>& predicate) {
-			Vector<type> result;
-			for (size_t i = 0; i < size; i++) {
-				if (predicate(data[i]))
-					result.PushBack(data[i]);
+		Vector<T> filter(const std::function<bool(T)>& predicate) {
+			Vector<T> result;
+			for (size_t i = 0; i < size_; i++) {
+				if (predicate(data_[i]))
+					result.pushBack(data_[i]);
 			}
 			return result;
 		}
 
-		[[nodiscard]]
-		type PopBack() {
-			assert(size > 0);
-
-			type elem = data[size - 1];
-			size--;
-			return elem;
-		}
-		[[nodiscard]]
-		type PopFront()	{
-			type* newData = new type[capacity];
-
-			for (unsigned int i = 0; i < size-1; i++)
-				newData[i] = data[i + 1];
-
-			type result = data[0];
-			delete[] data;
-			data = newData;
-			size--;
-			return result;
-		}
-		[[nodiscard]]
-		type Pop(unsigned ind) {
-			assert(ind < size && "Index out of range");
-			if (ind == 0)
-				return PopFront();
-			if (ind == size - 1)
-				return PopBack();
-
-			type* newData = new type[capacity];
-
-			for (uint32_t i = 0; i < ind; i++)
-				newData[i] = data[i];
-
-			type result = data[ind];
-
-			for (uint32_t i = ind + 1; i < size; i++)
-				newData[i] = data[i - 1];
-
-			delete[] data;
-			data = newData;
-			size--;
-			return result;
-		}
-		[[nodiscard]]
-		type& At(unsigned int ind) const {
-			assert(ind < capacity && "Index out of range");
-			return data[ind];
-		}
-		type& operator[](unsigned ind) const {
+		T& operator[](unsigned ind) const {
 			return At(ind);
 		}
-		void Remove(unsigned ind) {
-			assert(ind < size && "Index out of range");
 
-			type* newData = new type[capacity];
-
-			for (uint32_t i = 0; i < ind; i++)
-				newData[i] = data[i];
-
-
-			for (uint32_t i = ind + 1; i < size; i++)
-				newData[i] = data[i - 1];
-
-
-			delete[] data;
-			data = newData;
-			size--;
+		// iteration methods
+		T* begin() const {
+			return data_;
 		}
-
-		// Methods for iteration
-		type* begin() const {
-			return data;
-		}
-		type* end() const {
-			return data + size;
+		T* end() const {
+			return data_ + size_;
 		}
 
 
-		void Clear() {
-			delete[] data;
-			data = nullptr;
-			size = 0;
-
+		void clear() {
+			delete[] data_;
+			data_ = nullptr;
+			size_ = 0;
 		}
-		bool Empty() const {
-			return size == 0;
+		bool empty() const {
+			return size_ == 0;
 		}
-		unsigned int Size() const {
-			return size;
+		uint32_t size() const {
+			return size_;
 		}
 	};
-
-	
 }

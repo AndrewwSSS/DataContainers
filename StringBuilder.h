@@ -8,117 +8,115 @@ namespace DataContainers
 	class StringBuilder
 	{
 	private:
-		char** data;		 
-		uint32_t size;		// Number of substrings
-		uint32_t capacity;
-		uint32_t totalLen;  // Len of result string 
+		char** data_;		 
+		uint32_t size_;		// Number of substrings
+		uint32_t capacity_;
+		uint32_t totalLen_;  // Len of result string 
 
 		void setCapacity(uint32_t newCapacity = 0) {
 
-			if (newCapacity == 0 || newCapacity <= size)
-				newCapacity = 2 * capacity;
+			if (newCapacity == 0 || newCapacity <= size_)
+				newCapacity = 2 * capacity_;
 
 			char** newData = new char*[newCapacity];
 			for (int i = 0; i < newCapacity; i++)
 				newData[i] = nullptr;
 
-			for (int i = 0; i < size; i++)
-				newData[i] = data[i];
+			for (int i = 0; i < size_; i++)
+				newData[i] = data_[i];
 
-			delete[] data;
-			data = newData;
-			capacity = newCapacity;
+			delete[] data_;
+			data_ = newData;
+			capacity_ = newCapacity;
 		}
 		int getLen(const char* string) {
-			int res = 0;
+			int result= 0;
 			while (string[res++] != '\0') {}
-			return res;
+			return result;
 		}
 	public:
 		StringBuilder(uint32_t capacity = 8) {
-			this->capacity = capacity;
-			data = new char*[this->capacity];
-			size = 0;
-			totalLen = 0;
+			this->capacity_ = capacity;
+			data_ = new char*[this->capacity_];
+			size_ = 0;
+			totalLen_ = 0;
 		}
 		~StringBuilder() {
-			for (int i = 0; i < size; i++) {
-				delete[] data[i];
-				data[i] = nullptr;
+			for (int i = 0; i < size_; i++) {
+				delete[] data_[i];
+				data_[i] = nullptr;
 			}
-			capacity = 0;
-			size = 0;
-			delete[] data;
+			capacity_ = 0;
+			size_ = 0;
+			delete[] data_;
 		}
-		void Clear() {
-			for (int i = 0; i < size; i++) {
-				delete[] data[i];
-				data[i] = nullptr;
-			}
-			delete[] data;
 
-			this->capacity = 8;
-			data = new char* [this->capacity];
-			size = 0;
+		void clear() {
+			for (int i = 0; i < size_; i++) {
+				delete[] data_[i];
+				data_[i] = nullptr;
+			}
+			delete[] data_;
+
+			this->capacity_ = 8;
+			data_ = new char* [this->capacity_];
+			size_ = 0;
 		}
-		void Append(const char* string, bool endLine = false) {
+		void append(const char* string, bool endLine = false) {
 			int len = getLen(string);
 
-			if (size == capacity)
+			if (size_ == capacity_)
 				setCapacity();
 
 			if (endLine)
 				len += 1;
 
-			data[size] = new char[len];  // allocate memory to store new line
+			data_[size_] = new char[len];  // allocate memory to store new line
 
 			for (int i = 0; string[i] != '\0'; i++)
-				data[size][i] = string[i];
+				data_[size_][i] = string[i];
 
 			if(endLine)
-				data[size][len - 2] = '\n';
+				data_[size_][len - 2] = '\n';
 
-			data[size][len - 1] = '\0';
-			totalLen += len - 1;
-			size++;
+			data_[size_][len - 1] = '\0';
+			totalLen_ += len - 1;
+			size_++;
 
 		}
-		void Append(const String& str, bool endLine = false) {
-			int len = str.Len();
+		void append(const String& str, bool endLine = false) {
+			uint32_t len = str.len();
 
-			if (size == capacity)
+			if (size_ == capacity_)
 				setCapacity();
 
 			if (endLine)
 				len += 1;
 
-			data[size] = new char[len];  // allocate memory to store new line
+			data_[size_] = new char[len];  // allocate memory to store new line
 
 			for (int i = 0; str[i] != '\0'; i++)
-				data[size][i] = str[i];
+				data_[size_][i] = str[i];
 
 			if (endLine)
-				data[size][len - 2] = '\n';
+				data_[size_][len - 2] = '\n';
 
-			data[size][len - 1] = '\0';
-			totalLen += len - 1;
-			size++;
+			data_[size_][len - 1] = '\0';
+			totalLen_ += len - 1;
+			size_++;
 		}
-		void AppendLine(const char* string = "") {
-			Append(string, true);
+		void appendLine(const char* string = "") {
+			append(string, true);
 		}
-		uint32_t Capacity() const {
-			return capacity;
-		}
-		String ToString() const {
-			char* result = new char[totalLen + 1];
+		String toString() const {
+			char* result = new char[totalLen_ + 1];
 			uint32_t current = 0;
-			for (uint32_t s = 0; s < size; s++) {
+			for (uint32_t s = 0; s < size_; s++) {
 				int i = 0;
-				while (data[s][i] != '\0')
-					result[current++] = data[s][i++];
+				while (data_[s][i] != '\0')
+					result[current++] = data_[s][i++];
 			}
-			result[totalLen] = '\0';
+			result[totalLen_] = '\0';
 
 			return String(result);
 		}

@@ -6,21 +6,21 @@ using namespace std;
 
 namespace DataContainers {
 
-	template<typename type>
+	template<typename T>
 	class List {
 	private:
 		class Node {
 		public:
 			Node* Previous;
 			Node* Next;
-			type Data;
+			T Data;
 
 			Node() {
 				Next = nullptr;
 				Previous = nullptr;
 			}
 
-			Node(type data) : Node() {
+			Node(T data) : Node() {
 				this->Data = data;
 			} 
 
@@ -29,7 +29,7 @@ namespace DataContainers {
 				this->Next = next;
 			}
 
-			Node(Node* previous, Node* next, type data) : Node(previous, next) {
+			Node(Node* previous, Node* next, T data) : Node(previous, next) {
 				this->Data = data;
 			}
 
@@ -37,18 +37,18 @@ namespace DataContainers {
 
 		};
 
-		Node* head;
-		Node* tail;
-		unsigned int size;
+		Node* head_;
+		Node* tail_; 
+		uint32_t size_;
 
-		Node* NodeAt(int ind, unsigned int curr = 0, Node* node = nullptr) {
+		Node* NodeAt(int ind, uint32_t curr = 0, Node* node = nullptr) {
 
-			assert(ind >= 0 && ind <= size - 1 && "Index out of range");
+			assert(ind >= 0 && ind <= size_ - 1 && "Index out of range");
 
 			if (ind == 0)
-				return head;
-			if (ind == size - 1)
-				return tail;
+				return head_;
+			if (ind == size_ - 1)
+				return tail_;
 
 		#ifdef RECURSION
 			if (curr == ind)
@@ -79,14 +79,14 @@ namespace DataContainers {
 		#else
 			Node* current = nullptr;
 
-			if (size / 2 >= ind) {
-				current = this->head;
+			if (size_ / 2 >= ind) {
+				current = this->head_;
 				for (size_t i = 0; i < ind + 1; i++)
 					current = current->Next;
 				return current;
 			}
 			
-			current = this->tail;
+			current = this->tail_;
 			for (size_t i = ind; ind != i; i--)
 				current = current->Previous;
 			
@@ -94,13 +94,13 @@ namespace DataContainers {
 		#endif
 		}
 	public:
-		struct ListIterator {
+		class ListIterator {
+		public:
 			Node* node;
 
 			ListIterator() {
 				node = nullptr;
 			}
-
 			ListIterator(Node* node) {
 				this->node = node;
 			}
@@ -111,48 +111,107 @@ namespace DataContainers {
 			bool operator!=(const ListIterator& iterator) const {
 				return node != iterator.node;
 			}
-			type& operator*() {
+			T& operator*() {
 				return node->Data;
 			}
 		};
 
 		ListIterator begin() const {
-			return head;
+			return head_;
 		}
-
 		ListIterator end() const {
 			return nullptr;
 		}
 
 		List() {
-			this->head = nullptr;
-			this->tail = nullptr;
-			size = 0;
+			this->head_ = nullptr;
+			this->tail_ = nullptr;
+			size_ = 0;
 		}
-
-		List(const List<type>& list) {
-			for (unsigned int i = 0; i < list.Size(); i++)
-				PushBack(list[i]);
+		List(const List<T>& list) {
+			for (uint32_t i = 0; i < list.Size(); i++)
+				pushBack(list[i]);
 		}
-
 		~List() {
 			Clear();
 		}
 	
-		void PushBack(const type& elem);
-		void PushBack(const List<type>& lst);
-		void PushFront(const type& elem);
-		void Insert(const type& elem, unsigned int ind);
-		void Append(const type& elem) {
-			PushBack(elem);
+		void pushBack(const T& elem) {
+			if (head_ == nullptr) {
+				auto node = new Node(elem);
+				head_ = node;
+				size_++;
+				return;
+			}
+
+			Node* current = (tail_ == nullptr) ? head_ : tail_;
+			Node* newElem = new Node(current, nullptr, elem);
+			current->Next = newElem;
+			tail_ = newElem;
+
+			size_++;
+		}
+		void pushBack(const List<T>& lst) {
+			for (size_t i = 0; i < lst.Size(); i++)
+				pushBack(lst[i]);
+		}
+		void pushFront(const T& elem) {
+			if (head_ == nullptr) {
+				auto node = new Node(elem);
+				head_ = node;
+				size_++;
+				return;
+			}
+
+			Node* current = head_;
+			Node* newElem = new Node(nullptr, current, elem);
+
+			current->Previous = newElem;
+			if (tail_ == nullptr)
+				tail_ = current;
+			head_ = newElem;
+
+			size_++;
+		}
+		void insert(const T& elem, uint32_t ind) {
+			assert(ind <= size_ - 1 && "Index out of range");
+			Node* current = NodeAt(ind);
+
+			Node* prev = current->Previous;
+			Node* newElem = new Node(prev, current, elem);
+
+			prev->Next = newElem;
+			current->Previous = newElem;
 		}
 
-		void ForEach(const function<void(type)>& function);
-		List<type> Filter(const function<bool(type)>& predicate);
+		void append(const T& elem) {
+			pushBack(elem);
+		}
 
-		type Reduce(std::function<type(type, type)> func) {
-			type startVal = head->Data;
-			Node* node = head->Next;
+		void ForEach(const function<void(T)>& function) {
+			Node* current = head_;
+			do {
+				function(current->Data);
+				current = current->Next;
+			} while (current != nullptr);
+		}
+		List<T> Filter(const function<bool(T)>& predicate) {
+			auto result = List<T>();
+			if (size_ == 0)
+				return result;
+
+			Node* current = head_;
+			do {
+				if (predicate(current->Data))
+					result.pushBack(current->Data);
+				current = current->Next;
+			} while (current != nullptr);
+			return result;
+
+		}
+		T Reduce(std::function<T(T, T)> func) {
+			T startVal = head_->Data;
+			Node* node = head_->Next;
 			for (;node != nullptr;) {
 				startVal = func(startVal, node->Data);
 				node = node->Next;
@@ -160,284 +219,172 @@ namespace DataContainers {
 			return startVal;
 		}
 
-		type PopBack();
-		type PopFront();
-		type Pop(unsigned int ind);
-		void Remove(unsigned int ind);
+		T PopBack() {
+			assert(size_ > 0 && "List is empty");
 
-		type At(unsigned int ind, unsigned int curr = 0, Node* node = nullptr) const;
-		type operator[](int ind) const;
-		unsigned int Size() const;
-		void Clear();
-		bool Empty() const;
-	};
+			if (size_ == 1) {
+				size_--;
+				T& data = head_->Data;
+				head_ = nullptr;
+				return data;
+			}
 
+			if (size_ == 2) {
+				size_--;
+				T& data = tail_->Data;
+				tail_ = nullptr;
+				head_->Next = nullptr;
+				return data;
+			}
 
-	template<typename type>
-	void List<type>::PushBack(const type& elem) {
+			T& data = tail_->Data;
 
-		if (head == nullptr) {
-			auto node = new Node(elem);
-			head = node;
-			size++;
-			return;
-		}
+			auto current = tail_;
+			current = current->Previous;
+			current->Next = nullptr;
+			tail_ = current;
+			size_--;
 
-		Node* current = (tail == nullptr) ?  head : tail;
-		Node* newElem = new Node(current, nullptr, elem);
-		current->Next = newElem;
-		tail = newElem;
-
-		size++;
-	}
-
-	template<typename type>
-	void List<type>::PushBack(const List<type>& lst) {
-		for (size_t i = 0; i < lst.Size(); i++)
-			PushBack(lst[i]);
-	}
-
-	template<typename type>
-	void List<type>::PushFront(const type& elem) {
-		if (head == nullptr) {
-			auto node = new Node(elem);
-			head = node;
-			size++;
-			return;
-		}
-
-		Node* current = head;
-		Node* newElem = new Node(nullptr, current, elem);
-
-		current->Previous = newElem;
-		if (tail == nullptr)
-			tail = current;
-		head = newElem;
-
-		size++;
-	}
-
-	template<typename type>
-	void List<type>::Insert(const type& elem, unsigned int ind) {
-		assert(ind <= size - 1 && "Index out of range");
-		Node* current = NodeAt(ind);
-
-		Node* prev = current->Previous;
-		Node* newElem = new Node(prev, current, elem);
-
-		prev->Next = newElem;
-		current->Previous = newElem;
-	}
-
-
-
-	template <typename type>
-	void List<type>::ForEach(const function<void(type)>& function) {
-		Node* current = head;
-		do {
-			function(current->Data);
-			current = current->Next;
-		} while (current != nullptr);
-	}
-
-	template <typename type>
-	List<type> List<type>::Filter(const function<bool(type)>& predicate) {
-		auto result = List<type>();
-		if (size == 0)
-			return result;
-
-		Node* current = head;
-		do {
-			if (predicate(current->Data))
-				result.PushBack(current->Data);
-			current = current->Next;
-		} while (current != nullptr);
-		return result;
-
-	}
-
-	template<typename type>
-	type List<type>::PopBack() {
-		assert(size > 0 && "List is empty");
-		
-		if (size == 1) {
-			size--;
-			type& data = head->Data;
-			head = nullptr;
 			return data;
 		}
+		T PopFront() {
+			assert(size_ > 0 && "List is empty");
 
-		if (size == 2) {
-			size--;
-			type& data = tail->Data;
-			tail = nullptr;
-			head->Next = nullptr;
+			if (size_ == 1) {
+				size_--;
+				T data = head_->Data;
+				delete head_;
+				head_ = nullptr;
+				return data;
+			}
+
+			T data = head_->Data;
+			auto current = head_->Next;
+			delete head_;
+			current->Previous = nullptr;
+			head_ = current;
+			size_--;
 			return data;
 		}
+		T Pop(uint32_t ind) {
+			assert(ind >= 0 && ind <= size_ - 1 && "Index out of range");
+			if (ind == 0)
+				return PopFront();
+			if (ind == size_ - 1)
+				return PopBack();
 
-		type& data = tail->Data;
 
-		auto current = tail;
-		current = current->Previous;
-		current->Next = nullptr;
-		tail = current;
-		size--;
-		
-		return data;	
-	}
+			Node* current = NodeAt(ind);
 
-	template<typename type>
-	type List<type>::PopFront() {
-		assert(size > 0 && "List is empty");
-		
-		if (size == 1) {
-			size--;
-			type data = head->Data;
-			delete head;
-			head = nullptr;
+			Node* prev = current->Previous;
+			Node* next = current->Next;
+
+			if (prev != nullptr)
+				prev->Next = next;
+
+			if (next != nullptr)
+				next->Previous = prev;
+
+			size_--;
+			type data = current->Data;
+			delete current;
 			return data;
 		}
+		void Remove(uint32_t ind) {
+			assert(ind < size_ && ind >= 0 && "Index out of range");
 
-		type data = head->Data;
-		auto current = head->Next;
-		delete head;
-		current->Previous = nullptr;
-		head = current;
-		size--;
-		return data;
-	}
+			Node* current = NodeAt(ind);
 
-	template<typename type>
-	void List<type>::Remove(unsigned int ind) {
-		assert(ind < size && ind >= 0 && "Index out of range");
+			Node* prev = current->Previous;
+			Node* next = current->Next;
 
-		Node* current = NodeAt(ind);
 
-		Node* prev = current->Previous;
-		Node* next = current->Next;
-		
+			if (prev != nullptr)
+				prev->Next = next;
 
-		if(prev != nullptr)
-			prev->Next = next;
+			if (next != nullptr)
+				next->Previous = prev;
 
-		if (next != nullptr) 
-			next->Previous = prev;
-	
-		if (ind == size - 1) {
-			PopBack();
-			return;
+			if (ind == size_ - 1) {
+				PopBack();
+				return;
+			}
+
+			if (ind == 0) {
+				PopFront();
+				return;
+			}
+
+			delete current;
+
+			if (size_ == 1)
+				head_ = nullptr;
+
+			size_--;
+		}
+		void Clear() {
+			while (size_ > 0)
+				Remove(0);
 		}
 
-		if (ind == 0) {
-			PopFront();
-			return;
-		}
-			
-		delete current;
+		T At(uint32_t, uint32_t curr = 0, Node* node = nullptr) const {
+			assert(ind >= 0 && ind <= size_ - 1 && "Invalid indition to insert");
+#ifdef RECURSION
 
-		if (size == 1)
-			head = nullptr;
+			if (ind == 0)
+				return head->Data;
+			if (ind == size - 1)
+				return tail->Data;
 
-		size--;
-	}
+			if (curr == ind)
+				return node->Data;
 
-	template<typename type>
-	type List<type>::Pop(unsigned int ind) {
-		assert(ind >= 0 && ind <= size - 1 && "Index out of range");
-		if (ind == 0)
-			return PopFront();
-		if(ind == size -1)
-			return PopBack();
-
-
-		Node* current = NodeAt(ind);
-
-		Node* prev = current->Previous;
-		Node* next = current->Next;
-
-		if(prev != nullptr)
-			prev->Next = next;
-
-		if(next != nullptr)
-			next->Previous = prev;
-
-		size--;
-		type data = current->Data;
-		delete current;
-		return data;
-	}
+			if (node == nullptr) {
+				if (size / 2 >= ind) {
+					node = head;
+					curr = 0;
+				}
+				else {
+					node = tail;
+					curr = size - 1;
+				}
+			}
 
 
-	template<typename type>
-	type List<type>::At(unsigned int ind, unsigned int curr, Node* node) const {
-		assert(ind >= 0 && ind <= size - 1 && "Invalid indition to insert");
-	#ifdef RECURSION
-
-		if (ind == 0)
-			return head->Data;
-		if (ind == size - 1)
-			return tail->Data;
-
-		if (curr == ind)
-			return node->Data;
-
-		if (node == nullptr) {
 			if (size / 2 >= ind) {
-				node = head;
-				curr = 0;
+				curr++;
+				At(ind, curr, node->Next);
 			}
 			else {
-				node = tail;
-				curr = size - 1;
+				curr--;
+				At(ind, curr, node->Previous);
 			}
+
+
+#else
+			Node* current = nullptr;
+			if (size_ / 2 >= ind) {
+				current = head_;
+				for (size_t i = 0; i < ind; i++)
+					current = current->Next;
+			}
+			else {
+				current = tail_;
+
+				for (size_t i = size_ - 1; ind != i; i--)
+					current = current->Previous;
+			}
+			return current->Data;
+#endif
 		}
-
-
-		if (size / 2 >= ind) {
-			curr++;
-			At(ind, curr, node->Next);
+		T operator[](uint32_t ind) const {
+			return At(ind);
 		}
-		else {
-			curr--;
-			At(ind, curr, node->Previous);
+		uint32_t Size() const {
+			return this->size_;
 		}
-
-
-	#else
-		Node* current = nullptr;
-		if (size / 2 >= ind) {
-			current = head;
-			for (size_t i = 0; i < ind; i++)
-				current = current->Next;
+		bool Empty() const {
+			return size_ == 0;
 		}
-		else {
-			current = tail;
-
-			for (size_t i = size - 1; ind != i; i--)
-				current = current->Previous;
-		}
-		return current->Data;
-	#endif
-	}
-
-	template<typename type>
-	type List<type>::operator[](int ind) const {
-		return At(ind);
-	}
-
-	template<typename type>
-	unsigned int List<type>::Size() const {
-		return this->size;
-	}
-
-	template<typename type>
-	void List<type>::Clear() {
-		while (size > 0)
-			Remove(0);
-	}
-
-	template <typename type>
-	bool List<type>::Empty() const {
-		return size == 0;
-	}
+	};
 }

@@ -5,27 +5,27 @@
 
 using namespace DataContainers;
 
-TEST(VectorTests, ReadData) {
-	Vector<int> vector = { 1,2, 3, 4 };
+TEST(VectorTest, ReadData) {
+	const Vector<uint32_t> vector = { 1,2, 3, 4 };
 	EXPECT_EQ(vector[0], 1);
 	EXPECT_EQ(vector[1], 2);
 	EXPECT_EQ(vector[2], 3);
 	EXPECT_EQ(vector[3], 4);
-	EXPECT_EQ(vector.Size(), 4);
+	EXPECT_EQ(vector.size(), 4);
 }
 
-TEST(VectorTests, InsertData) {
-	Vector<int> vector;
-	for (size_t i = 0; i < 10; i++) {
-		vector.Append(i);
+TEST(VectorTest, InsertData) {
+	Vector<uint32_t> vector;
+	for (uint32_t i = 0; i < 10; i++) {
+		vector.append(i);
 	}
-	EXPECT_EQ(vector.Size(), 10);
+	EXPECT_EQ(vector.size(), 10);
 }
 
-TEST(ListTests, Iteration) {
+TEST(ListTest, Iteration) {
 	List<int> list;
 	for (size_t i = 0; i < 10; i++) {
-		list.PushBack(i);
+		list.pushBack(i);
 	}
 
 	int i = 0;
@@ -35,9 +35,9 @@ TEST(ListTests, Iteration) {
 	}
 }
 
-TEST(LinkedListTests, Iteration) {
-	LinkedList<int> list;
-	for (size_t i = 0; i < 10; i++) {
+TEST(LinkedListTest, Iteration) {
+	LinkedList<uint32_t> list;
+	for (uint32_t i = 0; i < 10; i++) {
 		list.PushBack(i);
 	}
 

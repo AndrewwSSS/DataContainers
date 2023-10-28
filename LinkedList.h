@@ -20,112 +20,11 @@ namespace DataContainers {
 			}
 		};
 
-		Node* head;
-		unsigned int size;
+		Node* head_;
+		uint32_t size_;
 
-		Node* NodeAt(int ind, int curr = 0, Node* elem = nullptr);
-
-	public:
-
-		struct LinkedListIterator {
-			Node* node;
-
-			LinkedListIterator() {
-				node = nullptr;
-			}
-
-			LinkedListIterator(Node* node) {
-				this->node = node;
-			}
-
-			void operator++() {
-				node = node->Next;
-			}
-			bool operator!=(const LinkedListIterator& iterator) const {
-				return node != iterator.node;
-			}
-			type& operator*() {
-				return node->Data;
-			}
-		};
-
-		LinkedListIterator begin() const {
-			return head;
-		}
-
-		LinkedListIterator end() const {
-			return nullptr;
-		}
-
-		LinkedList() {
-			size = 0;
-			head = nullptr;
-		}
-
-		LinkedList(const LinkedList<type>& _arr) {
-			head = nullptr;
-			Node* tmp = _arr.head;
-			size = 0;
-			for (size_t i = 0; i < _arr.Size(); i++) {
-				PushBack(tmp->Data);
-				tmp = tmp->Next;
-			}
-		}
-
-		~LinkedList() {
-			Сlear();
-		}
-
-		void PushBack(const type& elem);
-		void PushFront(const type&);
-		void Insert(const type&, unsigned int ind);
-
-
-		void ForEach(const function<void(type&)>& function);
-		LinkedList<type> Filter(const function<bool(type)>& function);
-		type Reduce(std::function<type(type, type)> function) {
-			type startVal = head->Data;
-			Node* node = head->Next;
-			for (; node != nullptr;) {
-				startVal = function(startVal, node->Data);
-				node = node->Next;
-			}
-			return startVal;
-		}
-
-
-		type& operator[](unsigned int ind);
-
-		type PopBack(Node* elem = nullptr);
-		type PopFront();
-		type Pop(int ind);
-		void Remove();
-
-
-		LinkedList& operator=(const LinkedList<type>& _arr) {
-			if (this == &_arr) return *this;
-			Node* tmp = _arr.head;
-			size = 0;
-			for (size_t i = 0; i < _arr.size(); i++) {
-				PushBack(tmp->Data);
-				tmp = tmp->Next;
-			}
-			return *this;
-		}
-		friend ostream& operator<<(ostream&, const LinkedList<type>&);
-		type& At(unsigned int ind, unsigned int curr = 0, Node* elem = nullptr);
-		unsigned int Size() const;
-		bool Empty() const;
-		void Сlear();
-
-		
-
-	};
-
-	template <typename type>
-	typename LinkedList<type>::Node* LinkedList<type>::NodeAt(int ind, int curr, Node* elem)
-	{
-	#ifdef RECURSION
+		Node* NodeAt(int ind, int curr = 0, Node* elem = nullptr) {
+#ifdef RECURSION
 			if (ind == 0)
 				return head;
 
@@ -138,202 +37,231 @@ namespace DataContainers {
 				curr++;
 				NodeAt(ind, curr, elem->pNext);
 			}
-	#else
-		int number = 0;
-		Node* current = head;
+#else
+			int number = 0;
+			Node* current = head_;
 
-		while (current != nullptr) {
-			if (number == ind)
-				return current;
+			while (current != nullptr) {
+				if (number == ind)
+					return current;
 
-			current = current->Next;
-			number++;
+				current = current->Next;
+				number++;
+			}
+			return nullptr;
+#endif
 		}
-		return nullptr;
-	#endif
-	}
+	public:
+		struct LinkedListIterator {
+			Node* node;
+			LinkedListIterator() {
+				node = nullptr;
+			}
+			LinkedListIterator(Node* node) {
+				this->node = node;
+			}
+			void operator++() {
+				node = node->Next;
+			}
+			bool operator!=(const LinkedListIterator& iterator) const {
+				return node != iterator.node;
+			}
+			type& operator*() {
+				return node->Data;
+			}
+		};
+
+		LinkedListIterator begin() const {
+			return head_;
+		}
+		LinkedListIterator end() const {
+			return nullptr;
+		}
+
+		LinkedList() {
+			size_ = 0;
+			head_ = nullptr;
+		}
+		LinkedList(const LinkedList<type>& _arr) {
+			head_ = nullptr;
+			Node* tmp = _arr.head_;
+			size_ = 0;
+			for (size_t i = 0; i < _arr.getSize(); i++) {
+				PushBack(tmp->Data);
+				tmp = tmp->Next;
+			}
+		}
+		~LinkedList() {
+			clear();
+		}
+
+		void PushBack(const type& elem) {
+			if (size_ == 0) {
+				head_ = new Node(elem, head_);
+				size_++;
+				return;
+			}
+
+			auto current = NodeAt(size_ - 1);
+			Node* NewElem = new Node(elem, current->Next);
+			current->Next = NewElem;
+			size_++;
+		}
+		void PushFront(const type& elem) {
+			head_ = new Node(elem, head_);
+			size_++;
+		}
+		void Insert(const type&, unsigned int ind) {
+			assert(ind <= size_ && "Index out of range");
+
+			if (ind == 0)
+				return PushFront(elem);
+			if (ind == size_ - 1)
+				return PushBack(elem);
+
+			auto current = NodeAt(ind - 1);
+			Node* NewElem = new Node(elem, current->Next);
+			current->Next = NewElem;
+			size_++;
+		}
 
 
+		void ForEach(const function<void(type&)>& function) {
+			Node* current = head_;
+			while (current != nullptr) {
+				function(current->Data);
+				current = current->Next;
+			}
+		}
+		LinkedList<type> Filter(const function<bool(type)>& function) {
+			auto result = LinkedList<type>();
+			Node* current = head_;
+			while (current != nullptr) {
+				if (function(current->Data))
+					result.pushBack(current->Data);
+				current = current->Next;
+			}
+			return result;
+		}
+		type Reduce(std::function<type(type, type)> function) {
+			type startVal = head_->Data;
+			Node* node = head_->Next;
+			for (; node != nullptr;) {
+				startVal = function(startVal, node->Data);
+				node = node->Next;
+			}
+			return startVal;
+		}
 
-	template<typename type>
-	type LinkedList<type>::Pop(int ind) {
-#ifdef RECURSION
-		if (ind == 0)
-			return PopFront();
-		else if (pos == 0) elem = head;
 
-		if (ind == pos - 1 || ind == 1) {
-			type data = elem->pNext->data;
-			Node* tmp = elem->pNext;
+		type& operator[](unsigned int ind) {
+			return At(ind);
+		}
 
-			elem->pNext = elem->pNext->pNext;
-			size--;
-			delete tmp;
+		type PopBack(Node* elem = nullptr) {
+			Node* current = NodeAt(size_ - 1);
+			type data = current->Data;
+			current->Next = nullptr;
+
+			delete current;
+			size_--;
 			return data;
 		}
-		else {
-			elem = elem->pNext;
-			pos++;
-			return popR(ind, elem, pos);
+		type PopFront() {
+			Node* tmp = head_;
+			type data = tmp->Data;
+			head_ = tmp->Next;
+			delete tmp;
+			size_--;
+			return data;
 		}
-#else 
-		if (ind == 0) return PopFront();
-
-		Node* interator = head;
-
-		for (size_t i = 0; i < ind - 1; i++)
-			interator = interator->Next;
-
-		type data = interator->Next->Data;
-		Node* tmp = interator->Next;
-
-		interator->Next = interator->Next->Next;
-		size--;
-		delete tmp;
-		return data;
-#endif 
-	}
-
-	template <typename type>
-	void LinkedList<type>::Remove() {
-	}
-
-	template<typename type>
-	void LinkedList<type>::Insert(const type& elem, unsigned int ind) {
-		assert(ind <= size && "Index out of range");
-
-		if (ind == 0)
-			return PushFront(elem);
-		if (ind == size - 1)
-			return PushBack(elem);
-
-		auto current = NodeAt(ind-1);
-		Node* NewElem = new Node(elem, current->Next);
-		current->Next = NewElem;
-		size++;
-	}
-
-	template<typename type>
-	void LinkedList<type>::PushBack(const type& elem) {
-
-		if (size == 0) {
-			head = new Node(elem, head);
-			size++;
-			return;
-		}
-			
-		auto current = NodeAt(size - 1);
-		Node* NewElem = new Node(elem, current->Next);
-		current->Next = NewElem;
-		size++;
-	}
-
-	template<typename type>
-	type LinkedList<type>::PopBack(Node* elem) {
-		Node* current = NodeAt(size - 1);
-		type data = current->Data;
-		current->Next = nullptr;
-
-		delete current;
-		size--;
-		return data;		
-	}
-
-	template<typename type>
-	type LinkedList<type>::PopFront() {
-		Node* tmp = head;
-		type data = tmp->Data;
-		head = tmp->Next;
-		delete tmp;
-		size--;
-		return data;
-	}
-
-	template<typename type>
-	void LinkedList<type>::PushFront(const type& elem)	{
-		head = new Node(elem, head);
-		size++;
-	}
-
-	template<typename type>
-	void LinkedList<type>::ForEach(const function<void(type&)>& function) {
-		Node* current = head;
-		while (current != nullptr) {
-			function(current->Data);
-			current = current->Next;
-		}
-	}
-
-	template<typename type>
-	LinkedList<type> LinkedList<type>::Filter(const function<bool(type)>& function) {
-		auto result = LinkedList<type>();
-		Node* current = head;
-		while (current != nullptr) {
-			if (function(current->Data))
-				result.PushBack(current->Data);
-			current = current->Next;
-		}
-		return result;
-	}
-
-	template<typename type>
-	type& LinkedList<type>::operator[](unsigned int ind) {
-		return At(ind);
-	}
-
-	template<typename type>
-	ostream& operator<< (ostream& out, const LinkedList<type>& d) {
-		auto tmp = d.head;
-
-		for (size_t i = 0; i < d.size; i++) {
-			out << tmp->Data << " ";
-			tmp = tmp->Next;
-		}
-		out << endl;
-		return out;
-	}
-
-	template<typename type>
-	type& LinkedList<type>::At(unsigned int ind, unsigned int curr, Node* elem) {
-		assert(ind <= size && "Index out of range");
+		type Pop(uint32_t ind) {
 #ifdef RECURSION
-		if (ind == 0)
-			return head->data;
+			if (ind == 0)
+				return PopFront();
+			else if (pos == 0) elem = head;
 
-		if (ind == curr)
-			return elem->data;
+			if (ind == pos - 1 || ind == 1) {
+				type data = elem->pNext->data;
+				Node* tmp = elem->pNext;
 
-		if (elem == nullptr) elem = head;
+				elem->pNext = elem->pNext->pNext;
+				size--;
+				delete tmp;
+				return data;
+			}
+			else {
+				elem = elem->pNext;
+				pos++;
+				return popR(ind, elem, pos);
+			}
+#else 
+			if (ind == 0) return PopFront();
 
-		if (ind != curr) {
-			curr++;
-			At(ind, curr, elem->pNext);
+			Node* interator = head_;
+
+			for (size_t i = 0; i < ind - 1; i++)
+				interator = interator->Next;
+
+			type data = interator->Next->Data;
+			Node* tmp = interator->Next;
+
+			interator->Next = interator->Next->Next;
+			size_--;
+			delete tmp;
+			return data;
+#endif 
 		}
+		void Remove();  // TODO find implemetation in git
+
+
+		LinkedList& operator=(const LinkedList<type>& _arr) {
+			if (this == &_arr) return *this;
+			Node* tmp = _arr.head_;
+			size_ = 0;
+			for (size_t i = 0; i < _arr.size_(); i++) {
+				PushBack(tmp->Data);
+				tmp = tmp->Next;
+			}
+			return *this;
+		}
+		friend ostream& operator<<(ostream&, const LinkedList<type>&);
+		type& At(unsigned int ind, unsigned int curr = 0, Node* elem = nullptr) {
+			assert(ind <= size_ && "Index out of range");
+#ifdef RECURSION
+			if (ind == 0)
+				return head->data;
+
+			if (ind == curr)
+				return elem->data;
+
+			if (elem == nullptr) elem = head;
+
+			if (ind != curr) {
+				curr++;
+				At(ind, curr, elem->pNext);
+			}
 #else
-		int number = 0;
-		Node* current = head;
+			int number = 0;
+			Node* current = head_;
 
-		while (current != nullptr) {
-			if (number == ind)
-				return current->Data;
+			while (current != nullptr) {
+				if (number == ind)
+					return current->Data;
 
-			current = current->Next;
-			number++;
-		}
+				current = current->Next;
+				number++;
+			}
+			return nullptr;
 #endif
-	}
-
-	template<typename type>
-	unsigned int LinkedList<type>::Size() const { return size; }
-
-	template<typename type>
-	void LinkedList<type>::Сlear() {
-		while (size != 0)
-			PopFront();
-	}
-
-	template <typename type>
-	bool LinkedList<type>::Empty() const {
-		return size == 0;
-	}
+		}
+		unsigned int getSize() const { return size_; }
+		bool empty() const {
+			return size_ == 0;
+		}
+		void clear() {
+			while (size_ != 0)
+				PopFront();
+		}
+	};
 }

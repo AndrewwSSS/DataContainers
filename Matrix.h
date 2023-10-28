@@ -8,132 +8,133 @@
 #include <cassert>
 #include <optional>
 #include <format>
+
 #include "Vector.h"
 
 
 namespace DataContainers {
-	template <typename type, typename = enable_if_t<is_arithmetic_v<type>>>
+	template <typename T, typename = enable_if_t<is_arithmetic_v<T>>>
 	class Matrix {
 	private:
-		unsigned int rows;
-		unsigned int columns;
-		int currRow;
-		int currCol;
-		type** data;
+		uint32_t rows_;
+		uint32_t columns_;
+		uint32_t currRow_;
+		uint32_t currCol_;
+		T** data_;
 
-		static int MaxSize(type** init, int row, int col) {
-			int res = 0;
+		static uint32_t maxSize(T** init, uint32_t row, uint32_t col) {
+			uint32_t result= 0;
 			for (size_t i = 0; i < row; i++)
 				for (size_t j = 0; j < col; j++)
-					if (to_string(init[i][j]).size() > res)
-						res = to_string(init[i][j]).size();
-			return res;
+					if (to_string(init[i][j]).size() > result)
+						result= to_string(init[i][j]).size();
+			return result;
 		}
 	public:
 		~Matrix() {
-			for (size_t i = 0; i < rows; i++) {
-				delete[] data[i];
-				data[i] = nullptr;
+			for (size_t i = 0; i < rows_; i++) {
+				delete[] data_[i];
+				data_[i] = nullptr;
 			}
-			delete data;
-			data = nullptr;
+			delete data_;
+			data_ = nullptr;
 		}
-		Matrix(unsigned int row, unsigned int col) {
-			data = new type * [row];
+		Matrix(uint32_t row, uint32_t col) {
+			data_ = new T*[row];
 			for (size_t i = 0; i < row; i++)
-				data[i] = new type[col];
+				data_[i] = new T[col];
 
-			this->rows = row;
-			this->columns = col;
-			this->currRow = 0;
-			this->currCol = -1;
+			this->rows_ = row;
+			this->columns_ = col;
+			this->currRow_ = 0;
+			this->currCol_ = -1;
 		}
-		Matrix(const Matrix<type>& elem) : Matrix(elem.rows, elem.columns) {
-			assert(elem.Height() == rows && elem.Width() == columns);
-			for (size_t i = 0; i < rows; i++)
-				for (size_t j = 0; j < columns; j++)
-					data[i][j] = elem.data[i][j];
+		Matrix(const Matrix<T>& elem) : Matrix(elem.rows_, elem.columns_) {
+			assert(elem.height() == rows_ && elem.width() == columns_);
+			for (size_t i = 0; i < rows_; i++)
+				for (size_t j = 0; j < columns_; j++)
+					data_[i][j] = elem.data_[i][j];
 		}
-		Matrix(type** data, unsigned int row, unsigned int col) {
-			this->data = new type * [row];
+		Matrix(T** data, uint32_t row, uint32_t col) {
+			this->data_ = new T * [row];
 			for (size_t i = 0; i < row; i++)
-				this->data[i] = new type[col];
+				this->data_[i] = new T[col];
 
 			for (size_t i = 0; i < row; i++)
 				for (size_t j = 0; j < col; j++)
-					this->data[i][j] = data[i][j];
+					this->data_[i][j] = data[i][j];
 
-			this->rows = row;
-			this->columns = col;
-			this->currCol = row - 1;
-			this->currRow = col - 1;
+			this->rows_ = row;
+			this->columns_ = col;
+			this->currCol_ = row - 1;
+			this->currRow_ = col - 1;
 		}
-		Matrix(type* data, unsigned int row, unsigned int col) : Matrix(row, col) {
-			int tmp = 0;
+		Matrix(T* data, uint32_t row, uint32_t col) : Matrix(row, col) {
+			uint32_t tmp = 0;
 			for (size_t i = 0; i < row; i++)
 				for (size_t j = 0; j < col; j++) {
-					this->data[i][j] = data[tmp++];
-					currCol = j;
-					currRow = i;
+					this->data_[i][j] = data[tmp++];
+					currCol_ = j;
+					currRow_ = i;
 				}
 		}
 
-		void Append(type elem) {
-			if (currCol + 1 <= columns - 1) {
-				currCol += 1;
-				data[currRow][currCol] = elem;
+		void append(T elem) {
+			if (currCol_ + 1 <= columns_ - 1) {
+				currCol_ += 1;
+				data_[currRow_][currCol_] = elem;
 			}
 			else {
-				if (currRow + 1 <= rows - 1) {
-					data[currRow + 1][0] = elem;
-					currRow += 1;
-					currCol = 0;
+				if (currRow_ + 1 <= rows_ - 1) {
+					data_[currRow_ + 1][0] = elem;
+					currRow_ += 1;
+					currCol_ = 0;
 				}
 				else
 					throw "Matrix if full";
 			}
 		}
-		static void Initialize(type**& init, int row, int col) {
-			init = new type * [row];
+		static void initialize(T**& init, int row, int col) {
+			init = new T * [row];
 			for (size_t i = 0; i < row; i++)
-				init[i] = new type[col];
+				init[i] = new T[col];
 		}
-		static void Delete(type**& init, int row) {
+		static void Delete(T**& init, int row) {
 			for (size_t i = 0; i < row; i++) {
 				delete[] init[i];
 				init[i] = nullptr;
 			}
 			init = nullptr;
 		}
-		type* GetColumn(int col) {
-			type* result = new type[columns];
-			for (size_t i = 0; i < rows; i++)
-				result[i] = data[i][col];
+		T* getColumn(uint32_t col) {
+			T* result = new T[columns_];
+			for (size_t i = 0; i < rows_; i++)
+				result[i] = data_[i][col];
 			return result;
 
 		}
-		type* GetRow(int row) {
-			type* result = new type[rows];
-			for (size_t i = 0; i < columns; i++)
-				result[i] = data[row][i];
+		T* getRow(uint32_t row) {
+			T* result = new T[rows_];
+			for (size_t i = 0; i < columns_; i++)
+				result[i] = data_[row][i];
 			return result;
 		}
 
-		friend ostream& operator<<(ostream& out, Matrix<type> p) {
-			int maxSize = MaxSize(p.data, p.rows, p.columns);
+		friend ostream& operator<<(ostream& out, Matrix<T> p) {
+			int maxSize = maxSize(p.data_, p.rows_, p.columns_);
 
-			for (size_t i = 0; i < p.rows; i++) {
-				for (size_t j = 0; j < p.columns; j++)
-					out << setw(maxSize + 2) << p.data[i][j];
+			for (size_t i = 0; i < p.rows_; i++) {
+				for (size_t j = 0; j < p.columns_; j++)
+					out << setw(maxSize + 2) << p.data_[i][j];
 				out << endl;
 			}
 			return out;
 		}
-		friend istream& operator>>(istream& in, Matrix<type>& p) {
-			for (size_t i = 0; i < p.rows; i++) {
+		friend istream& operator>>(istream& in, Matrix<T>& p) {
+			for (size_t i = 0; i < p.rows_; i++) {
 				COORD coord;
 				coord.Y = i + 1;
-				for (size_t j = 0; j < p.columns; j++) {
+				for (size_t j = 0; j < p.columns_; j++) {
 					if (j == 0)
 						coord.X = j + 1;
 					bool flag;
@@ -142,7 +143,7 @@ namespace DataContainers {
 						SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coord);
 
 						in >> tmp;
-						p.data[i][j] = tmp;
+						p.data_[i][j] = tmp;
 
 						const int elemSize = to_string(tmp).size();
 						if (in.fail()) {
@@ -162,18 +163,18 @@ namespace DataContainers {
 			return in;
 
 		}
-		friend Matrix operator+(const Matrix<type>& first, const Matrix<type>& second) {
-			assert(first.columns == second.rows);
+		friend Matrix operator+(const Matrix<T>& first, const Matrix<T>& second) {
+			assert(first.columns_ == second.rows_);
 
-			Matrix<type> tmp(first.rows, second.columns);
+			Matrix<T> tmp(first.rows_, second.columns_);
 
-			for (size_t i = 0; i < tmp.rows; i++) {
-				for (size_t j = 0; j < tmp.columns; j++) {
-					tmp.data[i][j] = 0;
-					for (size_t k = 0; k < first.columns; k++) {
+			for (size_t i = 0; i < tmp.rows_; i++) {
+				for (size_t j = 0; j < tmp.columns_; j++) {
+					tmp.data_[i][j] = 0;
+					for (size_t k = 0; k < first.columns_; k++) {
 
-						if (first.data[i][k] != 0 || second.data[k][j] != 0)
-							tmp.data[i][j] += (first.data[i][k] + second.data[k][j]);
+						if (first.data_[i][k] != 0 || second.data_[k][j] != 0)
+							tmp.data_[i][j] += (first.data_[i][k] + second.data_[k][j]);
 
 					}
 				}
@@ -181,376 +182,325 @@ namespace DataContainers {
 			return tmp;
 
 		}
-		friend Matrix operator-(const Matrix<type>& first, const Matrix<type>& second) {
-			assert((first.columns == second.columns && first.rows == second.rows) && "Matrix sizes do not match");
+		friend Matrix operator-(const Matrix<T>& first, const Matrix<T>& second) {
+			assert(first.columns_ == second.columns_ && first.rows_ == second.rows_ && "Matrix sizes do not match");
 
+			Matrix<T> result(first.rows_, first.columns_);
 
-			//cout << "\n\n\n";
-			//first.Print();
-			//cout << "\n\n\n";
-			//second.Print();
+			for (size_t i = 0; i < result.rows_; i++)
+				for (size_t j = 0; j < result.columns_; j++)
+					result.data_[i][j] = first.data_[i][j] - second.data_[i][j];
 
+			return result;
+		}
+		friend Matrix operator*(const Matrix<T>& first, const Matrix<T>& second) {
+			assert(first.columns_ == second.rows_);
 
-			Matrix<type> tmp(first.rows, first.columns);
+			Matrix<T> tmp(first.rows_, second.columns_);
 
-			for (size_t i = 0; i < tmp.rows; i++)
-				for (size_t j = 0; j < tmp.columns; j++) {
-					/*cout << first.data[i][j] << " " << second.data[i][j];
-					cout << "\n\n";*/
-					tmp.data[i][j] = first.data[i][j] - second.data[i][j];
-				}
+			for (int i = 0; i < tmp.rows_; ++i)
+				for (int j = 0; j < tmp.columns_; ++j)
+					tmp.data_[i][j] = 0;
+
+			for (int i = 0; i < tmp.rows_; ++i)
+				for (int j = 0; j < tmp.columns_; ++j)
+					for (int k = 0; k < first.columns_; ++k)
+						tmp.data_[i][j] += first.data_[i][k] * second.data_[k][j];
 
 			return tmp;
 		}
-		friend Matrix operator*(const Matrix<type>& first, const Matrix<type>& second) {
-			assert(first.columns == second.rows);
+		friend Matrix operator*(const T num, const Matrix<T>& second) {
+			Matrix<T> tmp(second.rows_, second.columns_);
 
-			Matrix<type> tmp(first.rows, second.columns);
-
-			for (int i = 0; i < tmp.rows; ++i)
-				for (int j = 0; j < tmp.columns; ++j)
-					tmp.data[i][j] = 0;
-
-			for (int i = 0; i < tmp.rows; ++i)
-				for (int j = 0; j < tmp.columns; ++j)
-					for (int k = 0; k < first.columns; ++k)
-						tmp.data[i][j] += first.data[i][k] * second.data[k][j];
-
-			return tmp;
-		}
-		friend Matrix operator*(const type num, const Matrix<type>& second) {
-			Matrix<type> tmp(second.rows, second.columns);
-
-			for (size_t i = 0; i < tmp.rows; i++) {
-				for (size_t j = 0; j < tmp.columns; j++) {
-					for (size_t k = 0; k < second.columns; k++)
-						tmp.data[i][j] = second.data[i][j] * num;
+			for (size_t i = 0; i < tmp.rows_; i++) {
+				for (size_t j = 0; j < tmp.columns_; j++) {
+					for (size_t k = 0; k < second.columns_; k++)
+						tmp.data_[i][j] = second.data_[i][j] * num;
 				}
 			}
 			return tmp;
 		}
-		friend Matrix operator*(Matrix<type>& second, type num) {
-			Matrix<type> tmp(second.rows, second.columns);
+		friend Matrix operator*(Matrix<T>& second, T num) {
+			Matrix<T> tmp(second.rows_, second.columns_);
 
-			for (size_t i = 0; i < tmp.rows; i++) {
-				for (size_t j = 0; j < tmp.columns; j++) {
-					for (size_t k = 0; k < second.columns; k++)
-						tmp.data[i][j] = second.data[i][j] * num;
+			for (size_t i = 0; i < tmp.rows_; i++) {
+				for (size_t j = 0; j < tmp.columns_; j++) {
+					for (size_t k = 0; k < second.columns_; k++)
+						tmp.data_[i][j] = second.data_[i][j] * num;
 				}
 			}
 			return tmp;
 		}
-		friend Matrix operator/(const Matrix<type>& first, const Matrix<type>& second) {
-			assert((first.columns == second.rows) && "Matrix sizes do not match");
+		friend Matrix operator/(const Matrix<T>& first, const Matrix<T>& second) {
+			assert(first.columns_ == second.rows_ && "Matrix sizes do not match");
 
-			Matrix<type> tmp(first.rows, second.columns);
+			Matrix<T> tmp(first.rows_, second.columns_);
 
-			for (size_t i = 0; i < tmp.rows; i++) {
-				for (size_t j = 0; j < tmp.columns; j++) {
-					tmp.data[i][j] = 0;
-					for (size_t k = 0; k < first.columns; k++) {
-						if (first.data[i][k] != 0 || second.data[k][j] != 0)
-							tmp.data[i][j] += (first.data[i][k] / second.data[k][j]);
+			for (size_t i = 0; i < tmp.rows_; i++) {
+				for (size_t j = 0; j < tmp.columns_; j++) {
+					tmp.data_[i][j] = 0;
+					for (size_t k = 0; k < first.columns_; k++) {
+						if (first.data_[i][k] != 0 || second.data_[k][j] != 0)
+							tmp.data_[i][j] += (first.data_[i][k] / second.data_[k][j]);
 					}
 				}
 			}
 			return tmp;
 
 		}
-		Matrix& operator=(const Matrix<type>& second)
+		Matrix& operator=(const Matrix<T>& second)
 		{
-			if (data != nullptr)
-				Clear();
+			if (data_ != nullptr)
+				clear();
 
-			rows = second.rows;
-			columns = second.columns;
+			rows_ = second.rows_;
+			columns_ = second.columns_;
 
-			data = new type * [rows];
-			for (size_t i = 0; i < columns; i++)
-				data[i] = new type[columns];
+			data_ = new T * [rows_];
+			for (size_t i = 0; i < columns_; i++)
+				data_[i] = new T[columns_];
 
-			for (size_t i = 0; i < rows; i++) {
-				for (size_t j = 0; j < columns; j++)
-					data[i][j] = second.data[i][j];
+			for (size_t i = 0; i < rows_; i++) {
+				for (size_t j = 0; j < columns_; j++)
+					data_[i][j] = second.data_[i][j];
 			}
 			return *this;
 		}
-		friend bool operator==(Matrix<type>& first, Matrix<type>& second) {
-			if (first.rows != second.rows || first.columns != second.columns) return false;
+		friend bool operator==(Matrix<T>& first, Matrix<T>& second) {
+			if (first.rows_ != second.rows_ || first.columns_ != second.columns_) return false;
 
-			for (size_t i = 0; i < first.rows; i++) {
-				for (size_t j = 0; j < first.columns; j++)
-					if (first.data[i][j] != second.data[i][j])
+			for (size_t i = 0; i < first.rows_; i++) {
+				for (size_t j = 0; j < first.columns_; j++)
+					if (first.data_[i][j] != second.data_[i][j])
 						return false;
 
 			}
 			return true;
 		}
-		friend bool operator!=(Matrix<type>& first, Matrix<type>& second) {
-			if (first.rows != second.rows || first.columns != second.columns)
+		friend bool operator!=(Matrix<T>& first, Matrix<T>& second) {
+			if (first.rows_ != second.rows_ || first.columns_ != second.columns_)
 				return true;
 
-			for (size_t i = 0; i < first.rows; i++) {
-				for (size_t j = 0; j < first.columns; j++)
-					if (first.data[i][j] != second.data[i][j])
+			for (size_t i = 0; i < first.rows_; i++)
+				for (size_t j = 0; j < first.columns_; j++)
+					if (first.data_[i][j] != second.data_[i][j])
 						return true;
-			}
 			return false;
 		}
 
-		void Clear()
-		{
-			for (size_t i = 0; i < rows; i++) {
-				delete[] data[i];
-				data[i] = nullptr;
+		void clear() {
+			for (size_t i = 0; i < rows_; i++) {
+				delete[] data_[i];
+				data_[i] = nullptr;
 			}
-			delete data;
-			data = nullptr;
-			rows = 0;
-			columns = 0;
+			delete data_;
+			data_ = nullptr;
+			rows_ = 0;
+			columns_ = 0;
 		}
-		void RandomFill(const type min = 0, const type max = 10) {
-			for (size_t i = 0; i < rows; i++) {
-				for (size_t j = 0; j < columns; j++) {
-					if constexpr (is_integral_v<type>) data[i][j] = rand() % (max - min + 1) + min;
-					else data[i][j] = (max - min) * rand() / RAND_MAX + min;
+		void randomFill(const T min = 0, const T max = 10) {
+			for (size_t i = 0; i < rows_; i++) {
+				for (size_t j = 0; j < columns_; j++) {
+					if constexpr (is_integral_v<T>) data_[i][j] = rand() % (max - min + 1) + min;
+					else data_[i][j] = (max - min) * rand() / RAND_MAX + min;
 				}
 			}
 		}
-		void Print(unsigned int space = 2, unsigned int height = 0) {
-			for (size_t i = 0; i < rows; i++) {
-				for (size_t j = 0; j < columns; j++)
-					cout << setw(MaxSize(data, rows, columns) + space)
-					<< data[i][j];
+		void print(uint32_t space = 2, uint32_t height = 0) {
+			for (size_t i = 0; i < rows_; i++) {
+				for (size_t j = 0; j < columns_; j++)
+					cout << setw(maxSize(data_, rows_, columns_) + space)
+					<< data_[i][j];
 				cout << endl;
 				for (size_t j = 0; j < height; j++)
 					cout << endl;
 
 			}
 		}
-		Matrix<type> Transposition() {
-			type** newData;
-			Initialize(newData, columns, rows);
+		Matrix<T> transposition() {
+			T** newData;
+			initialize(newData, columns_, rows_);
 
-			for (size_t i = 0; i < rows; i++) {
-				for (size_t j = 0; j < columns; j++)
-					newData[j][i] = data[i][j];
+			for (size_t i = 0; i < rows_; i++) {
+				for (size_t j = 0; j < columns_; j++)
+					newData[j][i] = data_[i][j];
 			}
-			return Matrix<type>(newData, columns, rows);
+			return Matrix<T>(newData, columns_, rows_);
 		}
-		// Request user input in console
-		void KbInput(int posX = -1, int posY = -1) {
-			if (posX == -1 || posY == -1) {
-				HANDLE h = GetStdHandle(STD_OUTPUT_HANDLE);
-				CONSOLE_SCREEN_BUFFER_INFO cbsi;
-				GetConsoleScreenBufferInfo(h, &cbsi);
-				posX = cbsi.dwCursorPosition.X;
-				posY = cbsi.dwCursorPosition.Y;
-			}
+		
+		uint32_t height() const  { return rows_; }
+		uint32_t width()  const  { return columns_; }
+		void deleteRow(int pos = -1) {
+			assert(pos >= -1 && pos <= rows_ - 1);
+			if (pos == -1) pos = rows_ - 1;
 
+			T** NewData = new T * [rows_ - 1];
 
-			for (size_t i = 0; i < rows; i++) {
-				COORD coord;
-				coord.Y = i + posY;
-				for (size_t j = 0; j < columns; j++) {
-					if (j == 0) coord.X = j + posX;
-					bool flag;
-					do {
-						int tmp;
-						SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coord);
+			initialize(NewData, rows_ - 1, columns_);
 
-						cin >> tmp;
-						data[i][j] = tmp;
+			if (pos != 0)
+				for (size_t i = 0; i < pos; i++)
+					for (size_t j = 0; j < columns_; j++)
+						NewData[i][j] = data_[i][j];
 
-						int size_tmpElem = to_string(tmp).size();
-						if (cin.fail()) {
-							cin.clear();
-							cin.ignore(32767, '\n');
-							SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coord);
-							for (size_t i = 0; i < 100; i++) cout << " ";
-							flag = true;
-						}
-						else {
-							flag = false;
-							coord.X += size_tmpElem + 2;
-						}
-					} while (flag);
-				}
-			}
+			for (size_t i = pos + 1, i_posNew = pos; i < rows_; i++, i_posNew++)
+				for (size_t j = 0, j_posNew = 0; j < columns_; j++, j_posNew++)
+					NewData[i_posNew][j_posNew] = data_[i][j];
+
+			Delete(data_, rows_);
+			data_ = NewData;
+			--rows_;
 		}
-		unsigned int Height() const { return rows; }
-		unsigned int Width() const { return columns; }
-		void DeleteRow(int pos = -1) {
-			assert(pos >= -1 && pos <= rows - 1);
-			if (pos == -1) pos = rows - 1;
+		void deleteColumn(int pos = -1) {
+			if (pos == -1) pos = columns_ - 1;
+			assert(pos >= 0 && pos <= columns_ - 1);
 
-			type** NewData = new type * [rows - 1];
-
-			Initialize(NewData, rows - 1, columns);
+			T** NewData;
+			initialize(NewData, rows_, columns_ - 1);
 
 			if (pos != 0) {
-				for (size_t i = 0; i < pos; i++) {
-					for (size_t j = 0; j < columns; j++)
-						NewData[i][j] = data[i][j];
-				}
-			}
-
-			for (size_t i = pos + 1, i_posNew = pos; i < rows; i++, i_posNew++) {
-				for (size_t j = 0, j_posNew = 0; j < columns; j++, j_posNew++)
-					NewData[i_posNew][j_posNew] = data[i][j];
-			}
-
-			Delete(data, rows);
-			data = NewData;
-			rows--;
-		}
-		void DeleteColumn(int pos = -1) {
-			if (pos == -1) pos = columns - 1;
-			assert(pos >= 0 && pos <= columns - 1);
-
-			type** NewData;
-			Initialize(NewData, rows, columns - 1);
-
-			if (pos != 0) {
-				for (size_t i = 0; i < rows; i++) {
+				for (size_t i = 0; i < rows_; i++) {
 					for (size_t j = 0; j < pos; j++)
-						NewData[i][j] = data[i][j];
+						NewData[i][j] = data_[i][j];
 				}
 			}
 
-			for (size_t i = 0; i < rows; i++) {
-				for (size_t j = pos + 1, j_NewData = pos; j < columns; j++, j_NewData++)
-					NewData[i][j_NewData] = data[i][j];
+			for (size_t i = 0; i < rows_; i++) {
+				for (size_t j = pos + 1, j_NewData = pos; j < columns_; j++, j_NewData++)
+					NewData[i][j_NewData] = data_[i][j];
 			}
 
-			Delete(data, rows);
-			data = NewData;
-			columns--;
+			Delete(data_, rows_);
+			data_ = NewData;
+			columns_--;
 
 		}
-		void AddRow(type* elem, int pos = -1) {
-			assert(pos >= -1 || pos < rows);
-			if (pos == -1) pos = rows;
+		void addRow(T* elem, int pos = -1) {
+			assert(pos >= -1 || pos < rows_);
+			if (pos == -1) pos = rows_;
 
-			type** NewData;
-			Initialize(NewData, rows + 1, columns);
+			T** NewData;
+			initialize(NewData, rows_ + 1, columns_);
 
 
 			for (size_t i = 0; i < pos; i++)
-				for (size_t j = 0; j < columns; j++)
-					NewData[i][j] = data[i][j];
+				for (size_t j = 0; j < columns_; j++)
+					NewData[i][j] = data_[i][j];
 
-			for (size_t i = 0; i < columns; i++)
+			for (size_t i = 0; i < columns_; i++)
 				NewData[pos][i] = elem[i];
 
-			for (size_t i = pos; i < rows; i++)
-				for (size_t j = 0; j < columns; j++)
-					NewData[i + 1][j] = data[i][j];
+			for (size_t i = pos; i < rows_; i++)
+				for (size_t j = 0; j < columns_; j++)
+					NewData[i + 1][j] = data_[i][j];
 
 
-			Delete(data, rows);
-			data = NewData;
-			rows++;
+			Delete(data_, rows_);
+			data_ = NewData;
+			rows_++;
 		}
-		void AddCol(type*& elem, int pos = -1) {
-			assert(pos > 0 || pos < columns);
+		void addCol(T* elem, int pos = -1) {
+			assert(pos > 0 || pos < columns_);
 
 			if (pos != -1)
-				pos = columns;
+				pos = columns_;
 
-			type** NewData;
-			Initialize(NewData, rows, columns + 1);
+			T** NewData;
+			initialize(NewData, rows_, columns_ + 1);
 
-			for (size_t i = 0; i < rows; i++)
+			for (size_t i = 0; i < rows_; i++)
 				for (size_t j = 0; j < pos; j++)
-					NewData[i][j] = data[i][j];
+					NewData[i][j] = data_[i][j];
 
-			for (size_t i = 0; i < rows; i++)
+			for (size_t i = 0; i < rows_; i++)
 				NewData[i][pos] = elem[i];
 
 
-			for (size_t i = 0; i < rows; i++)
-				for (size_t j_new = pos + 1, j_old = pos; j_old < columns; j_new++, j_old++)
-					NewData[i][j_new] = data[i][j_old];
+			for (size_t i = 0; i < rows_; i++)
+				for (size_t j_new = pos + 1, j_old = pos; j_old < columns_; j_new++, j_old++)
+					NewData[i][j_new] = data_[i][j_old];
 
 
-			Delete(data, rows);
-			data = NewData;
-			columns++;
+			Delete(data_, rows_);
+			data_ = NewData;
+			columns_++;
 
 		}
-		type Max() {
-			type res = data[0][0];
-			for (size_t i = 0; i < rows; i++)
-				for (size_t j = 0; j < columns; j++)
-					if (data[i][j] > res)
-						res = data[i][j];
-			return res;
+
+		T max() {
+			T result = data_[0][0];
+			for (size_t i = 0; i < rows_; i++)
+				for (size_t j = 0; j < columns_; j++)
+					if (data_[i][j] > result)
+						result = data_[i][j];
+			return result;
 		}
-		type Min() {
-			type res = data[0][0];
-			for (size_t i = 0; i < rows; i++) {
-				for (size_t j = 0; j < columns; j++) {
-					if (data[i][j] < res)
-						res = data[i][j];
+		T min() {
+			T result = data_[0][0];
+			for (size_t i = 0; i < rows_; i++) {
+				for (size_t j = 0; j < columns_; j++) {
+					if (data_[i][j] < result)
+						result = data_[i][j];
 				}
 			}
-			return res;
+			return result;
 		}
-		void SortLineByLine() {
-			for (size_t i = 0; i < rows; i++) {
-				for (size_t j = 0; j < columns - 1; j++) {
+
+		void sortLineByLine() {
+			for (size_t i = 0; i < rows_; i++) {
+				for (size_t j = 0; j < columns_ - 1; j++) {
 					int min = j;
-					for (size_t b = j + 1; b < columns; b++) {
-						if (data[i][b] < data[i][min])
+					for (size_t b = j + 1; b < columns_; b++) {
+						if (data_[i][b] < data_[i][min])
 							min = b;
 					}
-					swap(data[i][j], data[i][min]);
+					swap(data_[i][j], data_[i][min]);
 				}
 			}
 		}
-		void Sort() {
-			for (size_t i_swap = 0; i_swap < rows; i_swap++) {
-				for (size_t j_swap = 0; j_swap < columns; j_swap++) {
+		void sort() {
+			for (size_t i_swap = 0; i_swap < rows_; i_swap++) {
+				for (size_t j_swap = 0; j_swap < columns_; j_swap++) {
 					int row_min = i_swap;
 					int col_min = j_swap;
-					for (size_t i = row_min; i < rows; i++) {
+					for (size_t i = row_min; i < rows_; i++) {
 						if (i == row_min) {
-							for (size_t j = col_min + 1; j < columns; j++) {
-								if (data[i][j] < data[row_min][col_min]) {
+							for (size_t j = col_min + 1; j < columns_; j++) {
+								if (data_[i][j] < data_[row_min][col_min]) {
 									row_min = i;
 									col_min = j;
 								}
 							}
 						}
 						else {
-							for (size_t j = 0; j < columns; j++) {
-								if (data[i][j] < data[row_min][col_min]) {
+							for (size_t j = 0; j < columns_; j++) {
+								if (data_[i][j] < data_[row_min][col_min]) {
 									row_min = i;
 									col_min = j;
 								}
 							}
 						}
 					}
-					swap(data[i_swap][j_swap], data[row_min][col_min]);
+					swap(data_[i_swap][j_swap], data_[row_min][col_min]);
 				}
 
 			}
 		}
-		Matrix<type> Pow(int degree = 2) {
-			assert(rows == columns & degree >= 0);
-			Matrix<type> result = *this;
+
+		Matrix<T> pow(int degree = 2) {
+			assert(rows_ == columns_ & degree >= 0);
+			Matrix<T> result = *this;
 			for (size_t i = 1; i < degree; i++)
 				result = result * result;
 			return result;
 
 		}
-		type Determinant(type** data = nullptr, int row = 0, int col = 0) {
+		T determinant(T** data = nullptr, int row = 0, int col = 0) {
 			assert(row == col && row >= 0 && col >= 0);
 			if (!data) {
-				data = this->data;
-				row = rows;
-				col = columns;
+				data = this->data_;
+				row = rows_;
+				col = columns_;
 			}
 
 			if (row == 2 && col == 2)
@@ -558,10 +508,10 @@ namespace DataContainers {
 
 
 
-			type** newData = nullptr;
-			Matrix<type>::Initialize(newData, row - 1, col - 1);
+			T** newData = nullptr;
+			Matrix<T>::initialize(newData, row - 1, col - 1);
 
-			type result = 0;
+			T result = 0;
 			for (size_t i = 0; i < col; i++) {
 
 				int r = 0, c = 0;
@@ -582,14 +532,13 @@ namespace DataContainers {
 			}
 			return result;
 		}
-		Vector<type> GetVector() {
+		Vector<T> getVector() {
+			Vector<T> result(rows_ * columns_);
 
-			Vector<type> result(rows * columns);
-
-			for (size_t i = 0; i < currRow + 1; i++) {
-				for (size_t j = 0; j < columns; j++) {
-					result.PushBack(data[i][j]);
-					if (currRow == i && j == currCol)
+			for (size_t i = 0; i < currRow_ + 1; i++) {
+				for (size_t j = 0; j < columns_; j++) {
+					result.pushBack(data_[i][j]);
+					if (currRow_ == i && j == currCol_)
 						break;
 				}
 			}
@@ -598,78 +547,115 @@ namespace DataContainers {
 		}
 
 		//Gauss-Jordan method for calculate invesrse matrix
-		Matrix<type> Inverse() {
-			assert(rows == columns);
+		Matrix<T> inverse() {
+			assert(rows_ == columns_);
 
-			Matrix<type> augmented(rows, columns * 2);
+			Matrix<T> augmented(rows_, columns_ * 2);
 
-			for (int i = 0; i < rows; ++i)
-				for (int j = 0; j < columns; ++j) {
-					augmented.data[i][j] = data[i][j];
-					augmented.data[i][j + columns] = (i == j) ? 1 : 0;
+			for (int i = 0; i < rows_; ++i)
+				for (int j = 0; j < columns_; ++j) {
+					augmented.data_[i][j] = data_[i][j];
+					augmented.data_[i][j + columns_] = (i == j) ? 1 : 0;
 				}
 
-			for (int i = 0; i < rows; ++i) {
-
-				if (augmented.data[i][i] == 0) {
+			for (int i = 0; i < rows_; ++i) {
+				if (augmented.data_[i][i] == 0) {
 					int nonZeroRow = -1;
 
-					for (int k = i + 1; k < rows; ++k)
-						if (augmented.data[k][i] != 0) {
+					for (int k = i + 1; k < rows_; ++k)
+						if (augmented.data_[k][i] != 0) {
 							nonZeroRow = k;
 							break;
 						}
 
-					assert(nonZeroRow != -1); // Матрица вырожденная
+					assert(nonZeroRow != -1);
 
-					for (int j = 0; j < columns * 2; ++j)
-						std::swap(augmented.data[i][j], augmented.data[nonZeroRow][j]);
+					for (int j = 0; j < columns_ * 2; ++j)
+						std::swap(augmented.data_[i][j], augmented.data_[nonZeroRow][j]);
 				}
 
 
+				T divisor = augmented.data_[i][i];
+				for (int j = 0; j < columns_ * 2; ++j)
+					augmented.data_[i][j] /= divisor;
 
-				type divisor = augmented.data[i][i];
-				for (int j = 0; j < columns * 2; ++j)
-					augmented.data[i][j] /= divisor;
-
-				// Обнуляем все элементы в столбце, кроме текущего
-				for (int k = 0; k < rows; ++k)
+				for (int k = 0; k < rows_; ++k)
 					if (k != i) {
-						type factor = augmented.data[k][i];
-						for (int j = 0; j < columns * 2; ++j)
-							augmented.data[k][j] -= factor * augmented.data[i][j];
+						T factor = augmented.data_[k][i];
+						for (int j = 0; j < columns_ * 2; ++j)
+							augmented.data_[k][j] -= factor * augmented.data_[i][j];
 					}
 
 			}
 
 
 
-			Matrix<type> result(rows, columns);
-			for (int i = 0; i < rows; ++i)
-				for (int j = 0; j < columns; ++j)
-					result.data[i][j] = augmented.data[i][j + columns];
+			Matrix<T> result(rows_, columns_);
+			for (int i = 0; i < rows_; ++i)
+				for (int j = 0; j < columns_; ++j)
+					result.data_[i][j] = augmented.data_[i][j + columns_];
 
 			return result;
 		}
 
-		static Matrix<double> Parse(const String& data) {
-			auto rows = data.Split('\n', false);
-			int h = rows.Size();
-			int w = rows[0].Split(' ', false).Size();
+		static Matrix<double> parse(const String& data) {
+			auto rows = data.split('\n', false);
+			int h = rows.size();
+			int w = rows[0].split(' ', false).size();
 
-			auto m = Matrix<double>(h, w);
+			auto result = Matrix<double>(h, w);
 
 			for(const auto& row : rows)	{
-				for(const auto& elem : row.Split(' ', false)) {
+				for(const auto& elem : row.split(' ', false)) {
 					double buffer;
-					_atodbl((_CRT_DOUBLE*)&buffer, elem.CStr());
-					m.Append(buffer);
+					_atodbl((_CRT_DOUBLE*)&buffer, elem.cStr());
+					result.append(buffer);
 				}
 			}
-			return m;
+			return result;
 
 			
 		}
-
 	};
+
+
+	/*void KbInput(int posX = -1, int posY = -1) {
+		if (posX == -1 || posY == -1) {
+			HANDLE h = GetStdHandle(STD_OUTPUT_HANDLE);
+			CONSOLE_SCREEN_BUFFER_INFO cbsi;
+			GetConsoleScreenBufferInfo(h, &cbsi);
+			posX = cbsi.dwCursorPosition.X;
+			posY = cbsi.dwCursorPosition.Y;
+		}
+
+
+		for (size_t i = 0; i < rows_; i++) {
+			COORD coord;
+			coord.Y = i + posY;
+			for (size_t j = 0; j < columns_; j++) {
+				if (j == 0) coord.X = j + posX;
+				bool flag;
+				do {
+					int tmp;
+					SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coord);
+
+					cin >> tmp;
+					data_[i][j] = tmp;
+
+					int size_tmpElem = to_string(tmp).size();
+					if (cin.fail()) {
+						cin.clear();
+						cin.ignore(32767, '\n');
+						SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coord);
+						for (size_t i = 0; i < 100; i++) cout << " ";
+						flag = true;
+					}
+					else {
+						flag = false;
+						coord.X += size_tmpElem + 2;
+					}
+				} while (flag);
+			}
+		}
+	}*/
 }
