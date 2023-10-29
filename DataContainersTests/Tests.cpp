@@ -2,7 +2,7 @@
 #include "../../DataContainers/Vector.h"
 #include "../../DataContainers/List.h"
 #include "../../DataContainers/LinkedList.h"
-
+#include "../../DataContainers/String.h"
 using namespace DataContainers;
 
 TEST(VectorTest, ReadData) {
@@ -49,4 +49,13 @@ TEST(LinkedListTest, Iteration) {
 		EXPECT_EQ(elem, i);
 		i++;
 	}
+}
+
+
+TEST(StringTest, functions) {
+	String str("Aboba");
+	EXPECT_EQ(strcmp(str.append("boba").cStr(), "Abobaboba"), 0);
+	String str2("Aboba");
+	EXPECT_EQ(strcmp(str.append(str2).cStr(), "AbobaAboba"), 0);
+	
 }

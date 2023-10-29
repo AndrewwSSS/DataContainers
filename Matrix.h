@@ -27,8 +27,8 @@ namespace DataContainers {
 			uint32_t result= 0;
 			for (size_t i = 0; i < row; i++)
 				for (size_t j = 0; j < col; j++)
-					if (to_string(init[i][j]).size_() > result)
-						result= to_string(init[i][j]).size_();
+					if (to_string(init[i][j]).size() > result)
+						result= to_string(init[i][j]).size();
 			return result;
 		}
 	public:
@@ -80,7 +80,7 @@ namespace DataContainers {
 				}
 		}
 
-		void append(T elem) {
+		void append(const T elem) {
 			if (currCol_ + 1 <= columns_ - 1) {
 				currCol_ += 1;
 				data_[currRow_][currCol_] = elem;
@@ -92,7 +92,7 @@ namespace DataContainers {
 					currCol_ = 0;
 				}
 				else
-					throw "Matrix if full";
+					throw "Matrix is full";
 			}
 		}
 		static void initialize(T**& init, uint32_t row, uint32_t col) {
@@ -530,6 +530,8 @@ namespace DataContainers {
 
 						}
 					}
+				result += std::pow(-1, i + 2) *
+					data_[0][i] * determinant(newData, row - 1, col - 1);
 			}
 			return result;
 		}
@@ -609,7 +611,7 @@ namespace DataContainers {
 			for(const auto& row : rows)	{
 				for(const auto& elem : row.split(' ', false)) {
 					double buffer;
-					_atodbl((_CRT_DOUBLE*)&buffer, elem.cStr());
+					_atodbl((_CRT_DOUBLE*)&buffer, (char*)elem.cStr());
 					result.append(buffer);
 				}
 			}
@@ -620,34 +622,34 @@ namespace DataContainers {
 	};
 
 
-	/*void KbInput(int posX = -1, int posY = -1) {
+	Matrix<double> KbInput(uint32_t row, uint32_t col, int posX = -1, int posY = -1) {
+		HANDLE stdHandle = GetStdHandle(STD_OUTPUT_HANDLE);
 		if (posX == -1 || posY == -1) {
-			HANDLE h = GetStdHandle(STD_OUTPUT_HANDLE);
 			CONSOLE_SCREEN_BUFFER_INFO cbsi;
-			GetConsoleScreenBufferInfo(h, &cbsi);
+			GetConsoleScreenBufferInfo(stdHandle, &cbsi);
 			posX = cbsi.dwCursorPosition.X;
 			posY = cbsi.dwCursorPosition.Y;
 		}
 
-
-		for (size_t i = 0; i < rows_; i++) {
+		Matrix<double> result(row, col);
+		for (size_t i = 0; i < row; i++) {
 			COORD coord;
 			coord.Y = i + posY;
-			for (size_t j = 0; j < columns_; j++) {
+			for (size_t j = 0; j < col; j++) {
 				if (j == 0) coord.X = j + posX;
 				bool flag;
 				do {
 					int tmp;
-					SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coord);
+					SetConsoleCursorPosition(stdHandle, coord);
 
 					cin >> tmp;
-					data_[i][j] = tmp;
+					result.append(tmp);
 
 					int size_tmpElem = to_string(tmp).size();
 					if (cin.fail()) {
 						cin.clear();
 						cin.ignore(32767, '\n');
-						SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coord);
+						SetConsoleCursorPosition(stdHandle, coord);
 						for (size_t i = 0; i < 100; i++) cout << " ";
 						flag = true;
 					}
@@ -658,5 +660,6 @@ namespace DataContainers {
 				} while (flag);
 			}
 		}
-	}*/
+		return result;
+	}
 }

@@ -16,31 +16,51 @@ namespace DataContainers{
 		uint32_t size_;
 		// TODO implement capacity
 		uint32_t capacity_;
+
+		void setCapacity(uint32_t capacity) {
+
+			if(capacity_ >= capacity)
+				return;
+
+			while(capacity_ < capacity)
+				capacity_ *= 2;
+
+			auto newData = new char[capacity_];
+			for (size_t i = 0; i < size_; i++)
+				newData[i] = data_[i];
+
+			delete data_;
+			data_ = newData;
+		}
+
 	public:
 		String() {
-			data_ = nullptr;
 			size_ = 0;
-			
+			capacity_ = 8;
+			data_ = new char[capacity_];
 		}
 
 		String(const char* str) {
 			size_ = getLen(str)+1;
 			data_ = new char[size_];
+			capacity_ = size_;
 
 			for (uint32_t i = 0; i < size_; i++)
 				data_[i] = str[i];
+
 			data_[size_ - 1] = '\0';
 
 		}
-		String(const String& str) {
-			this->size_ = str.size_;
-			this->data_ = new char[this->size_];
-
-			for (int i = 0; i < this->size_; i++)
-				this->data_[i] = str.data_[i];
-		}
 		~String() {
-			clear();
+			if(!data_)
+				return;
+		
+			delete[] data_;
+			data_ = nullptr;
+		}
+
+		operator const char*() const {
+			return data_;
 		}
 
 		static uint32_t getLen(const char* str) {
@@ -49,36 +69,18 @@ namespace DataContainers{
 				len += 1;
 			return len;
 		}
-		String append(const char* str) {
-			const uint32_t len = getLen(str);
 
-			if (str == nullptr || len == 1)
-				return *this;
+		String& append(const char* str) {
+			uint32_t len = getLen(str);
+			auto totalLen = len + size_;
 
-			uint32_t newLen = 0;
+			setCapacity(totalLen);
 
-			if (size_ == 0)
-				newLen++;
-			else
-				newLen += size_ - 1;
+			memcpy(data_ + size_ - 1, str, len+1);
 
-			newLen += len;
-
-			char* newData = new char[newLen];
-
-			for (uint32_t i = 0; i < size_; i++)
-				newData[i] = this->data_[i];
-
-			for (uint32_t i = 0; i < len; i++)
-				newData[size_ - 1 + i] = str[i];
-
-			newData[size_ + len - 1] = '\0';
-			return String{ newData };
+			return *this;
 		}
-		String append(const String& str) {
-			return append(str.cStr());
-		}
-		String revers() const {
+		String reverse() const {
 			char* newData = new char[size_];
 			for (uint32_t i = 0, j = size_ - 2; i < size_ - 1; i++, j--)
 				newData[i] = this->data_[j];
@@ -87,21 +89,12 @@ namespace DataContainers{
 			return newData;
 		}
 		void clear() {
-			if (data_ != nullptr) {
-				delete[] data_;
-				data_ = nullptr;
-			}
 			size_ = 0;
 		}
-		bool empty() const {
+		bool isEmpty() const {
 			return size_ == 0;
 		}
-		char* cStr() const {
-			char* result = new char[size_];
-
-			for (uint32_t i = 0; i < size_; i++)
-				result[i] = data_[i];
-
+		const char* cStr() const {
 			return data_;
 		}
 		uint32_t len() const {
@@ -113,7 +106,7 @@ namespace DataContainers{
 			return data_[index];
 		}
 		friend std::ostream& operator<<(std::ostream& os, const String& str) {
-			if (!str.empty())
+			if (!str.isEmpty())
 				os << str.data_;
 			return os;
 		}
@@ -122,7 +115,7 @@ namespace DataContainers{
 			std::cin.getline(buffer, _MAX_PATH);
 			const uint32_t totalLen = String::getLen(buffer);
 
-			if (!str.empty())
+			if (!str.isEmpty())
 				str.clear();
 
 			str.data_ = new char[totalLen + 1];
@@ -134,55 +127,8 @@ namespace DataContainers{
 
 			return in;
 		}
-		void operator+=(const char* str) {
-			const uint32_t oldLen = size_;
-			if (size_ == 0) size_++;
-			size_ += getLen(str) - 1;
-
-			char* oldData = new char[oldLen];
-
-			for (uint32_t i = 0; i < oldLen; i++)
-				oldData[i] = data_[i];
-
-			if (data_ != nullptr) {
-				delete[]data_;
-				data_ = nullptr;
-			}
-
-			data_ = new char[size_];
-			uint32_t i = 0;
-
-			if (oldLen != 0)
-				for (; i < oldLen - 1; i++)
-					data_[i] = oldData[i];
-
-			for (uint32_t j = 0; i < size_; i++, j++)
-				data_[i] = str[j];
-		}
-		void operator+=(const String& str) {
-			const uint32_t oldLen = size_;
-			if (oldLen == 0) size_++;
-			size_ += str.size_ - 1;
-
-			char* oldData = new char[oldLen];
-
-			for (uint32_t i = 0; i < oldLen; i++)
-				oldData[i] = data_[i];
-
-			if (data_ != nullptr) {
-				delete[]data_;
-				data_ = nullptr;
-			}
-
-			data_ = new char[size_];
-			uint32_t i = 0;
-			if (oldLen != 0)
-				for (; i < oldLen - 1; i++)
-					data_[i] = oldData[i];
-
-			for (uint32_t j = 0; i < size_; i++, j++)
-				data_[i] = str[j];
-
+		String& operator+=(const char* str) {
+			return append(str);
 		}
 		char* operator+(const char* str) {
 			const uint32_t oldLen = size_;
@@ -202,39 +148,12 @@ namespace DataContainers{
 
 			return NewData;
 		}
-		String operator+(const String& str) {
-			int oldLen = size_;
-			if (oldLen == 0) size_++;
-			size_ += (str.size_ - 1);
-
-			char* NewData = new char[size_];
-
-			uint32_t i = 0;
-			if (oldLen != 0)
-				for (; i < oldLen - 1; i++)
-					NewData[i] = data_[i];
-
-			for (uint32_t j = 0; i < size_; i++, j++)
-				NewData[i] = str[j];
-
-			return String(NewData);
-		}
 		String& operator=(const char* str) {
 			size_ = getLen(str);
 
 			data_ = new char[size_];
 			for (uint32_t i = 0; i < size_; i++)
 				data_[i] = str[i];
-
-			return *this;
-		}
-		String& operator=(const String& str) {
-			if (this == &str) return *this;
-			size_ = str.len()+1;
-
-			this->data_ = new char[size_];
-			for (uint32_t i = 0; i < size_; i++)
-				this->data_[i] = str.data_[i];
 
 			return *this;
 		}

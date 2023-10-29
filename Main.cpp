@@ -4,7 +4,10 @@ using namespace std;
 using namespace DataContainers;
 
 int main() {
-	auto m = Matrix<double>::parse("1 2 3\n 4 5 6\n 7 8 9");
-	m.print(1);
+	srand(time(0));
+	Matrix<int64_t> m(20, 20);
+	m.randomFill();
+	m.print();
+	cout << m.determinant();
 
 }
