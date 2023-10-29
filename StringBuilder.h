@@ -9,7 +9,7 @@ namespace DataContainers
 	{
 	private:
 		char** data_;		 
-		uint32_t size_;		// Number of substrings
+		uint32_t size_;		 // Number of substrings
 		uint32_t capacity_;
 		uint32_t totalLen_;  // Len of result string 
 
@@ -108,6 +108,7 @@ namespace DataContainers
 		void appendLine(const char* string = "") {
 			append(string, true);
 		}
+
 		String toString() const {
 			char* result = new char[totalLen_ + 1];
 			uint32_t current = 0;

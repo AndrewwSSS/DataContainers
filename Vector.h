@@ -53,13 +53,7 @@ namespace DataContainers {
 		void append(const T& data) {
 			pushBack(data);
 		}
-		T reduce(std::function<T(T, T)> func) {
-			T startVal = data_[0];
-			for (size_t i = 1; i < size_; i++) {
-				startVal = func(startVal, data_[i]);
-			}
-			return startVal;
-		}
+
 		void pushBack(const T& elem) {
 			if (size_ == capacity_)
 				setCapacity();
@@ -149,11 +143,6 @@ namespace DataContainers {
 			size_--;
 			return result;
 		}
-		T& At(uint32_t ind) const {
-			assert(ind < capacity_ && "Index out of range");
-			return data_[ind];
-		}
-
 		void insert(const T& elem, uint32_t ind) {
 
 			if (ind == 0)
@@ -179,6 +168,12 @@ namespace DataContainers {
 
 			size_++;
 		}
+		T& At(uint32_t ind) const {
+			assert(ind < capacity_ && "Index out of range");
+			return data_[ind];
+		}
+
+	
 		void forEach(const std::function<void(T)>& function) {
 			for (size_t i = 0; i < size_; i++)
 				function(data_[i]);
@@ -191,10 +186,18 @@ namespace DataContainers {
 			}
 			return result;
 		}
+		T reduce(std::function<T(T, T)> func) {
+			T startVal = data_[0];
+			for (size_t i = 1; i < size_; i++) {
+				startVal = func(startVal, data_[i]);
+			}
+			return startVal;
+		}
 
-		T& operator[](unsigned ind) const {
+		T& operator[](uint32_t ind) const {
 			return At(ind);
 		}
+
 
 		// iteration methods
 		T* begin() const {
@@ -210,7 +213,7 @@ namespace DataContainers {
 			data_ = nullptr;
 			size_ = 0;
 		}
-		bool empty() const {
+		bool isEmpty() const {
 			return size_ == 0;
 		}
 		uint32_t size() const {

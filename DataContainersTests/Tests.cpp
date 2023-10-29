@@ -16,18 +16,20 @@ TEST(VectorTest, ReadData) {
 
 TEST(VectorTest, InsertData) {
 	Vector<uint32_t> vector;
-	for (uint32_t i = 0; i < 10; i++) {
+
+	for (uint32_t i = 0; i < 10; i++)
 		vector.append(i);
-	}
+	
 	EXPECT_EQ(vector.size(), 10);
 }
 
 TEST(ListTest, Iteration) {
-	List<int> list;
-	for (size_t i = 0; i < 10; i++) {
-		list.pushBack(i);
-	}
+	List<uint32_t> list;
 
+	for (uint32_t i = 0; i < 10; i++)
+		list.pushBack(i);
+	
+	    
 	int i = 0;
 	for(const auto& elem : list) {
 		EXPECT_EQ(elem, i);
@@ -37,11 +39,12 @@ TEST(ListTest, Iteration) {
 
 TEST(LinkedListTest, Iteration) {
 	LinkedList<uint32_t> list;
-	for (uint32_t i = 0; i < 10; i++) {
-		list.PushBack(i);
-	}
 
-	int i = 0;
+	for (uint32_t i = 0; i < 10; i++)
+		list.PushBack(i);
+	
+
+	uint32_t i = 0;
 	for (const auto& elem : list) {
 		EXPECT_EQ(elem, i);
 		i++;

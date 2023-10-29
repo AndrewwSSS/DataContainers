@@ -1,8 +1,9 @@
 ﻿#pragma once
+#ifndef NOMINMAX
 #define NOMINMAX
+#endif NOMINMAX
 #include <Windows.h>
 #include <iomanip>
-#include "String.h"
 #include <iostream>
 #include <string>
 #include <cassert>
@@ -10,7 +11,7 @@
 #include <format>
 
 #include "Vector.h"
-
+#include "String.h"
 
 namespace DataContainers {
 	template <typename T, typename = enable_if_t<is_arithmetic_v<T>>>
@@ -26,8 +27,8 @@ namespace DataContainers {
 			uint32_t result= 0;
 			for (size_t i = 0; i < row; i++)
 				for (size_t j = 0; j < col; j++)
-					if (to_string(init[i][j]).size() > result)
-						result= to_string(init[i][j]).size();
+					if (to_string(init[i][j]).size_() > result)
+						result= to_string(init[i][j]).size_();
 			return result;
 		}
 	public:
@@ -94,12 +95,12 @@ namespace DataContainers {
 					throw "Matrix if full";
 			}
 		}
-		static void initialize(T**& init, int row, int col) {
+		static void initialize(T**& init, uint32_t row, uint32_t col) {
 			init = new T * [row];
 			for (size_t i = 0; i < row; i++)
 				init[i] = new T[col];
 		}
-		static void Delete(T**& init, int row) {
+		static void Delete(T**& init, uint32_t row) {
 			for (size_t i = 0; i < row; i++) {
 				delete[] init[i];
 				init[i] = nullptr;
@@ -266,7 +267,7 @@ namespace DataContainers {
 			}
 			return *this;
 		}
-		friend bool operator==(Matrix<T>& first, Matrix<T>& second) {
+		friend bool operator==(const Matrix<T>& first, const Matrix<T>& second) {
 			if (first.rows_ != second.rows_ || first.columns_ != second.columns_) return false;
 
 			for (size_t i = 0; i < first.rows_; i++) {
