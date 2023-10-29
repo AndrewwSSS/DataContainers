@@ -1,4 +1,7 @@
 #pragma once
+#ifndef _CRT_SECURE_NO_WARNINGS
+#define _CRT_SECURE_NO_WARNINGS
+#endif
 #include <cassert>
 #include<iostream>
 #include<fstream>
@@ -78,6 +81,7 @@ namespace DataContainers{
 
 			memcpy(data_ + size_ - 1, str, len+1);
 
+			size_ = totalLen;
 			return *this;
 		}
 		String reverse() const {
@@ -130,23 +134,15 @@ namespace DataContainers{
 		String& operator+=(const char* str) {
 			return append(str);
 		}
-		char* operator+(const char* str) {
-			const uint32_t oldLen = size_;
-			if (size_ == 0) size_++;
-			size_ += (String::getLen(str) - 1);
+		String operator+(const char* str) const {
+			auto len = getLen(str);
+			auto totalLen = size_ + len;
+			auto newData = new char[totalLen];
 
-			char* NewData = new char[size_];
-
-			uint32_t i = 0;
-			if (oldLen != 0)
-				for (; i < oldLen - 1; i++)
-					NewData[i] = data_[i];
-
-
-			for (uint32_t j = 0; i < size_; i++, j++)
-				NewData[i] = str[j];
-
-			return NewData;
+			strcpy(newData, data_);
+			strcpy(newData + size_ - 1, str);
+			
+			return newData;
 		}
 		String& operator=(const char* str) {
 			size_ = getLen(str);
@@ -157,7 +153,16 @@ namespace DataContainers{
 
 			return *this;
 		}
+		bool operator==(const char* str) const{
+			uint32_t len = getLen(str);
+			if (size_ + 1 != len)
+				return false;
 
+			for (size_t i = 0; i < size_; i++)
+				if (data_[i] != str[i])
+					return false;
+			return true;
+		}
 
 		// Based on Levenshtein distance algorithm
 		// Return similarity between strings in percentage from 0 to 100

@@ -33,11 +33,7 @@ namespace DataContainers {
 		}
 	public:
 		~Matrix() {
-			for (size_t i = 0; i < rows_; i++) {
-				delete[] data_[i];
-				data_[i] = nullptr;
-			}
-			delete data_;
+			delete[] data_;
 			data_ = nullptr;
 		}
 		Matrix(uint32_t row, uint32_t col) {

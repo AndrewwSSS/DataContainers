@@ -52,10 +52,22 @@ TEST(LinkedListTest, Iteration) {
 }
 
 
+bool EqualStrings(const char* first, const char* second) {
+	return strcmp(first, second) == 0;
+}
+
+TEST(StringTest, operators) {
+	String str1("Hello");
+	String str2("-Hello");
+
+	String tmp = str1 + str2;
+	EXPECT_TRUE(EqualStrings(tmp.cStr(), "Hello-Hello"));
+	EXPECT_TRUE(EqualStrings(str1 + "Hi", "HelloHi"));
+}
+
 TEST(StringTest, functions) {
-	String str("Aboba");
-	EXPECT_EQ(strcmp(str.append("boba").cStr(), "Abobaboba"), 0);
-	String str2("Aboba");
-	EXPECT_EQ(strcmp(str.append(str2).cStr(), "AbobaAboba"), 0);
-	
+	String str1("Hello");
+	String str2("World!");
+	EXPECT_TRUE(EqualStrings(str1.append(" ").append(str2), "Hello World!"));
+	EXPECT_TRUE(EqualStrings(str2.reverse(), "!dlroW"));
 }
